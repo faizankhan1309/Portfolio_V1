@@ -52,8 +52,8 @@ export const LoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
       <div
         className="absolute rounded-full"
         style={{
-          width: '420px',
-          height: '420px',
+          width: '0px',
+          height: '0px',
           border: '1px solid rgba(220,38,38,0.12)',
           animation: 'spin-slow 8s linear infinite',
         }}
@@ -61,22 +61,22 @@ export const LoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
       <div
         className="absolute rounded-full"
         style={{
-          width: '340px',
-          height: '340px',
+          width: '0px',
+          height: '0px',
           border: '1px solid rgba(59,130,246,0.1)',
           animation: 'spin-slow 6s linear infinite reverse',
         }}
       />
 
       {/* Main glowing blob */}
-      <div className="relative flex items-center justify-center" style={{ width: '260px', height: '260px' }}>
+      <div className="relative flex items-center justify-center" style={{ width: '0px', height: '0px' }}>
 
         {/* Outer glow — red */}
         <div
           className="absolute rounded-full"
           style={{
-            width: '260px',
-            height: '260px',
+            width: '0px',
+            height: '0px',
             background: 'radial-gradient(ellipse, rgba(220,38,38,0.25) 0%, transparent 70%)',
             animation: 'pulse-blob 2.4s ease-in-out infinite',
           }}
@@ -86,36 +86,15 @@ export const LoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
         <div
           className="absolute rounded-full"
           style={{
-            width: '200px',
-            height: '200px',
+            width: '0px',
+            height: '0px',
             background: 'radial-gradient(ellipse, rgba(37,99,235,0.3) 0%, transparent 70%)',
             animation: 'pulse-blob 2.4s ease-in-out infinite 0.4s',
           }}
         />
 
-        {/* Core blob */}
-        <div
-          className="absolute rounded-full"
-          style={{
-            width: '140px',
-            height: '140px',
-            background: 'radial-gradient(ellipse at 40% 35%, #1e3a8a 0%, #0f172a 50%, #1a0a0a 80%, #7f1d1d 100%)',
-            boxShadow: '0 0 60px rgba(220,38,38,0.4), 0 0 120px rgba(37,99,235,0.2), inset 0 0 30px rgba(0,0,0,0.5)',
-            animation: 'breathe 2.4s ease-in-out infinite',
-          }}
-        />
 
-        {/* Inner shimmer highlight */}
-        <div
-          className="absolute rounded-full"
-          style={{
-            width: '60px',
-            height: '60px',
-            top: '38px',
-            left: '46px',
-            background: 'radial-gradient(ellipse, rgba(255,255,255,0.08) 0%, transparent 70%)',
-          }}
-        />
+ 
 
         {/* Floating particles */}
         {[...Array(6)].map((_, i) => (
@@ -123,8 +102,8 @@ export const LoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
             key={i}
             className="absolute rounded-full"
             style={{
-              width: i % 2 === 0 ? '4px' : '3px',
-              height: i % 2 === 0 ? '4px' : '3px',
+              width: i % 2 === 0 ? '0px' : '0px',
+              height: i % 2 === 0 ? '0px' : '0px',
               background: i % 3 === 0 ? 'rgba(239,68,68,0.8)' : i % 3 === 1 ? 'rgba(96,165,250,0.8)' : 'rgba(255,255,255,0.5)',
               borderRadius: '50%',
               animation: `orbit-${i} ${3 + i * 0.5}s linear infinite`,
