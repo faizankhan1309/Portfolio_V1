@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { LoadingScreen } from './components/loadingscreen';
 import { Navigation } from './components/Navigation';
-import { Hero } from './components/Hero';x
+import { Hero } from './components/Hero';
 import { Videeo } from './components/Videeo';
 import { Skills } from './components/Skills';
 import { Projects } from './components/Projects';
