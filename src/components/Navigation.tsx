@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
-import { Home } from "lucide-react";
+
 
 const navLinks = [
   { name: 'About', href: '#Hero' },
