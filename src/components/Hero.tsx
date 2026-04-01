@@ -595,7 +595,7 @@ export const Hero = () => {
                 letterSpacing: '0.01em',
                 display: 'inline-block',
                 width: 'fit-content',
-                transform: 'translate(100px, -20px) scale(1.76)',
+                transform: 'translate(30px, -20px) scale(1.56)',
               }}>
                 <span style={{
 
@@ -617,8 +617,8 @@ export const Hero = () => {
             {/* Accent line + paragraph */}
             <div style={{
             position:   'relative',
-            left: '250px',  
-            top:  '130px',
+            left: '150px',  
+            top:  '150px',
             scale: '1.24',
 
              }}>
@@ -648,11 +648,7 @@ export const Hero = () => {
             </div>
 
             {/* Divider */}
-            <div style={{
-              width:      '40px',
-              height:     '1px',
-              background: 'rgba(239,68,68,0.5)',
-            }} />
+          
 
             {/* Availability badge */}
           
