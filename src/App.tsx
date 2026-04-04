@@ -27,7 +27,7 @@ function App() {
       <WorkExperience />
 
       {/* Gallery pins, Contact slides over it */}
-      <div style={{ position: 'relative', height: '200vh' }}>
+      <div className="gallery-contact-wrapper" style={{ position: 'relative', height: '200vh' }}>
         <Gallery />
         <Contact />
       </div>

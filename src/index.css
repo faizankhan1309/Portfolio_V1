@@ -81,3 +81,46 @@ body {
   background-color: #00F0FF;
   color: #080B12;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   MOBILE / TABLET RESPONSIVE OVERRIDES  (≤1024px)
+   Desktop (>1024px) is completely untouched.
+═══════════════════════════════════════════════════════════════════════ */
+
+/* Prevent any horizontal scroll on small screens */
+@media (max-width: 1024px) {
+  html, body {
+    overflow-x: hidden;
+  }
+
+  /* Gallery+Contact sticky wrapper: disable fixed height on mobile,
+     let sections stack naturally */
+  .gallery-contact-wrapper {
+    height: auto !important;
+    position: static !important;
+  }
+
+  /* Navigation: reduce top padding on mobile so nav isn't too tall */
+  nav .w-full.px-4.py-12 {
+    padding-top: 0.75rem !important;
+    padding-bottom: 0.75rem !important;
+  }
+
+  /* Improve touch scrolling in carousel/skills areas */
+  .gallery-carousel-wrap,
+  .skills-arena-wrap {
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* ── Phone-specific (≤640px) ──────────────────────────────────────── */
+@media (max-width: 640px) {
+  /* Hide custom scrollbar on very small screens */
+  ::-webkit-scrollbar { display: none; }
+
+  /* Tighter section vertical rhythm */
+  section {
+    min-height: auto !important;
+  }
+}

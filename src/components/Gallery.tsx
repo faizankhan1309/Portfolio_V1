@@ -169,7 +169,7 @@ export const Gallery = () => {
         >
           
           <h2
-            className="text-5xl md:text-6xl font-bold text-white mb-4"
+            className="text-5xl md:text-6xl font-bold text-white mb-4 gallery-heading"
             style={{ fontFamily: 'FuturaCyrillicBold, sans-serif' }}
           >
             GALLERY
@@ -179,7 +179,7 @@ export const Gallery = () => {
 
         {/* Carousel */}
         <div
-          className={`relative flex items-center justify-center transition-all duration-1000 delay-200 ${
+          className={`relative flex items-center justify-center transition-all duration-1000 delay-200 gallery-carousel-wrap ${
             isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
           }`}
           style={{ height: '560px' }}
@@ -352,7 +352,7 @@ export const Gallery = () => {
           onClick={() => setSelected(null)}
         >
           <div
-            className="relative w-full max-w-xl rounded-2xl overflow-hidden border border-white/10"
+            className="relative w-full max-w-xl rounded-2xl overflow-hidden border border-white/10 gallery-modal-inner"
             style={{
               background: '#0D1117',
               animation: 'modalIn 0.28s cubic-bezier(0.16,1,0.3,1) both',
@@ -361,7 +361,7 @@ export const Gallery = () => {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Image header — tall banner */}
-            <div className="relative h-96 overflow-hidden">
+            <div className="relative h-96 overflow-hidden gallery-modal-img-wrap">
               <img
                 src={selected.image}
                 alt={selected.title}
@@ -408,10 +408,48 @@ export const Gallery = () => {
         </div>
       )}
 
+
       <style>{`
         @keyframes modalIn {
           from { opacity: 0; transform: scale(0.93) translateY(16px); }
           to   { opacity: 1; transform: scale(1)    translateY(0);    }
+        }
+
+        /* ── Mobile/Tablet carousel scaling ─────────────────────────────── */
+        @media (max-width: 1024px) {
+          .gallery-carousel-wrap {
+            height: 400px !important;
+            overflow: hidden;
+          }
+          .gallery-carousel-wrap > div {
+            transform: scale(0.72);
+            transform-origin: center center;
+          }
+        }
+        @media (max-width: 640px) {
+          .gallery-carousel-wrap {
+            height: 300px !important;
+          }
+          .gallery-carousel-wrap > div {
+            transform: scale(0.54);
+            transform-origin: center center;
+          }
+        }
+
+        /* ── Gallery heading responsive ──────────────────────────────────── */
+        .gallery-heading {
+          font-size: clamp(2.5rem, 8vw, 3.75rem) !important;
+        }
+
+        /* ── Modal on mobile: scrollable, shorter image ───────────────────── */
+        @media (max-width: 640px) {
+          .gallery-modal-inner {
+            max-height: 90svh;
+            overflow-y: auto;
+          }
+          .gallery-modal-img-wrap {
+            height: 220px !important;
+          }
         }
       `}</style>
     </section>

@@ -2,12 +2,16 @@
  * Hero.tsx — Fixed Layout + Marquee on scroll only
  * About section redesigned: editorial split-layout with cutout portrait,
  * large background typography, and asymmetric composition.
+ *
+ * Mobile/Tablet (≤1024px): renders two clean stacked sections, no GSAP/ScrollTrigger.
+ * Desktop (>1024px): renders the full animated overlay version unchanged.
  */
 
 import { useLayoutEffect, useRef, useState, useEffect } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ChevronDown, Download, Eye, Briefcase, Calendar, Rocket, Trophy } from 'lucide-react';
+import { useIsMobile } from '../hooks/useIsMobile';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -23,6 +27,9 @@ const STATS = [
 ];
 
 export const Hero = () => {
+
+  /* ── mobile/tablet detection ────────────────────────────────────────── */
+  const isMobile = useIsMobile();
 
   /* ── typewriter ─────────────────────────────────────────────────────── */
   const [titleIdx, setTitleIdx] = useState(0);
@@ -198,6 +205,228 @@ export const Hero = () => {
     observer.observe(aboutStatsRef.current!);
     return () => observer.disconnect();
   }, []);
+
+  /* ══════════════════════════════════════════════════════════════════════
+     MOBILE / TABLET RENDER — two clean stacked sections, no GSAP pin
+  ══════════════════════════════════════════════════════════════════════ */
+  if (isMobile) {
+    return (
+      <>
+        {/* ── MOBILE HERO ───────────────────────────────────────────── */}
+        <div
+          id="Hero"
+          style={{
+            position: 'relative',
+            minHeight: '100svh',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            overflow: 'hidden',
+            backgroundImage: "url('/media/backdrop2.jpg')",
+            backgroundSize: 'cover',
+            backgroundPosition: 'center 70%',
+          }}
+        >
+          {/* Dark overlay */}
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(8,11,18,0.55)', zIndex: 0 }} />
+          {/* Bottom fade */}
+          <div style={{
+            position: 'absolute', bottom: 0, left: 0, right: 0, height: '180px',
+            background: 'linear-gradient(to top, #080B12, transparent)', zIndex: 1, pointerEvents: 'none',
+          }} />
+
+          {/* Content */}
+          <div style={{
+            position: 'relative', zIndex: 2,
+            display: 'flex', flexDirection: 'column', alignItems: 'center',
+            textAlign: 'center', padding: '2rem 1.25rem', gap: '0.5rem',
+          }}>
+            <h1 style={{
+              fontFamily: 'FuturaCyrillicBold, Impact, Arial Black, sans-serif',
+              fontSize: 'clamp(2.8rem, 11vw, 5rem)',
+              fontWeight: 900, color: '#ffffff',
+              letterSpacing: '0.1em', lineHeight: 1, margin: 0,
+              textShadow: '0 0 60px rgba(0,240,255,0.18)',
+              whiteSpace: 'nowrap',
+            }}>
+              FAIZAN KHAN
+            </h1>
+
+            <div style={{
+              marginTop: '0.6rem', marginBottom: '1rem',
+              width: 'clamp(100px,40vw,220px)', height: '1px',
+              background: 'linear-gradient(90deg, transparent, rgba(0,240,255,0.5), transparent)',
+            }} />
+
+            {/* Typewriter */}
+            <div style={{ height: '1.8rem', marginBottom: '1.2rem' }}>
+              <p style={{
+                fontFamily: 'monospace', fontSize: 'clamp(0.85rem, 3.5vw, 1.1rem)',
+                color: '#00F0FF', margin: 0,
+              }}>
+                {display}<span style={{ animation: 'mhb 1s step-end infinite' }}>|</span>
+              </p>
+            </div>
+
+            {/* CTAs */}
+            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+              <button
+                onClick={() => document.getElementById('projects')?.scrollIntoView({ behavior: 'smooth' })}
+                style={{
+                  padding: '0.75rem 1.4rem',
+                  background: 'linear-gradient(135deg,#ef4444,#991b1b)',
+                  border: 'none', borderRadius: '0.45rem',
+                  color: '#fff', fontWeight: 600, fontSize: '0.875rem',
+                  letterSpacing: '0.04em', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: '0.4rem',
+                }}
+              >
+                <Eye size={15} /> View My Work
+              </button>
+              <button
+                onClick={() => window.open('/media/resume.pdf')}
+                style={{
+                  padding: '0.75rem 1.4rem', background: 'transparent',
+                  border: '1.5px solid #f87171', borderRadius: '0.45rem',
+                  color: '#f87171', fontWeight: 600, fontSize: '0.875rem',
+                  letterSpacing: '0.04em', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: '0.4rem',
+                }}
+              >
+                <Download size={15} /> Resume
+              </button>
+            </div>
+          </div>
+
+          {/* Scroll hint */}
+          <div style={{
+            position: 'absolute', bottom: '1.5rem', left: '50%',
+            transform: 'translateX(-50%)', zIndex: 3,
+            animation: 'mhbounce 1.6s ease-in-out infinite',
+          }}>
+            <ChevronDown color="#00F0FF" size={24} />
+          </div>
+        </div>
+
+        {/* ── MOBILE ABOUT ──────────────────────────────────────────── */}
+        <div
+          id="about"
+          style={{
+            backgroundColor: '#080B12',
+            padding: 'clamp(3rem, 8vw, 5rem) clamp(1.25rem, 5vw, 2rem)',
+            borderTop: '1px solid rgba(0,240,255,0.08)',
+          }}
+        >
+          {/* Portrait */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            marginBottom: '2.5rem',
+          }}>
+            <div style={{
+              position: 'relative',
+              width: 'clamp(200px, 60vw, 320px)',
+              borderRadius: '1rem',
+              overflow: 'visible',
+            }}>
+              {/* Ambient glow */}
+              <div style={{
+                position: 'absolute', bottom: 0, left: '50%',
+                transform: 'translateX(-50%)',
+                width: '80%', height: '60%',
+                background: 'radial-gradient(ellipse at 50% 100%, rgba(239,68,68,0.3) 0%, transparent 70%)',
+                filter: 'blur(30px)', zIndex: 0, pointerEvents: 'none',
+              }} />
+              <img
+                src="/media/profilebg.png"
+                alt="Faizan Khan"
+                style={{
+                  width: '100%', height: 'auto',
+                  display: 'block', position: 'relative', zIndex: 1,
+                  filter: 'drop-shadow(0 10px 30px rgba(239,68,68,0.25))',
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Stats grid */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '1.25rem',
+            marginBottom: '2.5rem',
+          }}>
+            {STATS.map(({ icon: Icon, value, label }) => (
+              <div key={label} style={{
+                borderLeft: '2px solid rgba(239,68,68,0.4)',
+                paddingLeft: '1rem',
+                display: 'flex', flexDirection: 'column', gap: '0.15rem',
+              }}>
+                <span style={{
+                  fontFamily: 'FuturaCyrillicBold, Impact, Arial Black, sans-serif',
+                  fontSize: 'clamp(2rem, 8vw, 3rem)',
+                  fontWeight: 900, color: '#ffffff', lineHeight: 1,
+                }}>{value}</span>
+                <span style={{
+                  display: 'flex', alignItems: 'center', gap: '0.35rem',
+                  fontSize: 'clamp(0.7rem, 3vw, 0.9rem)',
+                  color: 'rgba(156,163,175,0.75)',
+                  textTransform: 'uppercase', letterSpacing: '0.1em',
+                  fontFamily: 'FuturaCyrillicBold',
+                }}>
+                  <Icon size={14} style={{ color: '#ef4444', flexShrink: 0 }} />
+                  {label}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* Text content */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <h2 style={{
+              fontFamily: 'FuturaCyrillicBold, Impact, Arial Black, sans-serif',
+              fontSize: 'clamp(1.5rem, 6vw, 2.4rem)',
+              fontWeight: 700, color: '#ffffff',
+              lineHeight: 1.2, margin: 0,
+            }}>
+              <span style={{ color: '#f70000', display: 'block' }}>Where Logic ends,</span>
+              <span style={{ color: '#ffffff' }}>Creativity finds a way</span>
+            </h2>
+
+            <div style={{ position: 'relative', paddingLeft: '1.25rem' }}>
+              <div style={{
+                position: 'absolute', left: 0, top: '0.2rem', bottom: '0.2rem',
+                width: '2px',
+                background: 'linear-gradient(to bottom, #ef4444, rgba(239,68,68,0.2))',
+                borderRadius: '9999px',
+              }} />
+              <p style={{
+                color: 'rgba(209,213,219,0.75)',
+                fontSize: 'clamp(0.9rem, 3.5vw, 1.05rem)',
+                lineHeight: 1.8, margin: 0,
+                fontFamily: '"Outfit", system-ui, sans-serif',
+                fontWeight: 300,
+              }}>
+                A software engineer specializing in AI and machine learning,
+                focused on building intelligent, real-world systems.
+                Passionate about the intersection of art, design, and technology
+                to create meaningful digital experiences.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <style>{`
+          @keyframes mhb      { 0%,100%{opacity:1} 50%{opacity:0} }
+          @keyframes mhbounce {
+            0%,100%{ transform:translateX(-50%) translateY(0);  }
+            50%    { transform:translateX(-50%) translateY(7px); }
+          }
+        `}</style>
+      </>
+    );
+  }
 
   /* ── marquee units ──────────────────────────────────────────────────── */
   const createMqUnits = (prefix: string) => Array.from({ length: REPEATS }, (_, i) => (
