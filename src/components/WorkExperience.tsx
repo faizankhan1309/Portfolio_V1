@@ -1,245 +1,378 @@
 /**
- * WorkExperience.tsx — Responsive
- * Changes:
- *  - Master-detail grid: 2-col on desktop, stacks to 1-col on mobile
- *    (already handled by md:grid-cols-[5fr_8fr]; verified and kept)
- *  - Section padding uses clamp()
- *  - Heading uses clamp()
- *  - Detail card has min-height:0 so it never forces overflow on small screens
- *  - No animation or visual changes
+ * WorkExperience.tsx — Image 2 Reference
+ *
+ * Desktop (≥1024px):
+ *   LEFT: Full-height building column — one floor per experience, spans the entire section.
+ *         The active floor glows with that experience's accent color.
+ *         Floor numbers labelled on the right side of the building (05F, 04F, … 01F)
+ *         Building has: antenna at top, multiple floor windows, concrete ground at bottom.
+ *   RIGHT: Stacked experience cards that fill the whole right area.
+ *          IntersectionObserver updates the active floor as cards enter viewport.
+ *
+ * Mobile (<1024px): Timeline line + stacked cards
  */
 
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
-import { Briefcase, Calendar, Rocket, Trophy } from 'lucide-react';
-import { useState } from 'react';
+import { useIsMobile } from '../hooks/useIsMobile';
 
 interface Experience {
   id: number; role: string; company: string; type: string | null;
-  duration: string; initials: string; tags: string[];
-  highlight: string; points: string[];
+  location: string; duration: string; initials: string;
+  tags: string[]; points: string[];
+  accent: string; glow: string; isPresent: boolean;
 }
 
 const experiences: Experience[] = [
   {
-    id: 3, role: 'Asset Development Lead', company: 'REFFTO', type: null,
-    duration: 'Apr 2024 - Jun 2024', initials: 'RF',
-    tags: ['Blender', '3D Rendering', 'Pipeline', 'Team Lead'],
-    highlight: 'Led Blender-based rendering workflows for the asset development pipeline.',
-    points: [
-      'Led end-to-end 3D rendering workflows in Blender, from initial modeling through final output for production use.',
-      'Defined pipeline standards that improved consistency and reduced revision cycles across the team.',
-      'Optimized render settings and workflow processes to significantly improve asset turnaround time.',
-      'Reviewed and quality-checked team output before delivery, ensuring all assets met project requirements.',
-    ],
-  },
-  {
-    id: 1, role: 'Google Cloud Arcade Facilitator', company: 'Google', type: 'Program 2025',
-    duration: '2025', initials: 'GC',
-    tags: ['Cloud Computing', 'GCP', 'Community', 'Mentorship'],
-    highlight: 'Guided students through Google Cloud skill badges and hands-on labs.',
-    points: [
-      'Facilitated the Google Cloud Arcade program, helping students earn skill badges and complete hands-on Google Cloud labs.',
-      'Mentored participants through cloud fundamentals, including compute, storage, networking, and machine learning on GCP.',
-      'Tracked milestone completions and provided support to ensure high completion rates across the cohort.',
-      'Acted as the primary point of contact between program participants and Google Cloud resources.',
-    ],
-  },
-  {
-    id: 6, role: 'Co-founder', company: 'Pixel Room - LNCT Bhopal', type: null,
-    duration: '2025 - Present', initials: 'PR',
-    tags: ['Community Building', 'Gaming', 'Events', 'Leadership'],
-    highlight: 'Co-founded the first gaming community at LNCT Bhopal.',
-    points: [
-      'Co-founded Pixel Room, the first dedicated student gaming community at LNCT Bhopal, building it from the ground up.',
-      'Organized gaming events, tournaments, and community meetups that brought together students across departments.',
-      'Managed community growth strategy, onboarding members and establishing community guidelines and culture.',
-      'Built partnerships with student organizations and college administration to secure resources and event spaces.',
-    ],
-  },
-  {
-    id: 5, role: 'Junior Manager', company: 'AIESEC in India', type: null,
-    duration: 'Feb 2025 - Apr 2025', initials: 'AI',
-    tags: ['Business Development', 'Sponsorship', 'National Level', 'Strategy'],
-    highlight: 'Drove national-level sponsorship and business development.',
-    points: [
-      'Drove business development and sponsorship acquisition efforts at the national level for AIESEC in India.',
-      'Identified strategic partnership opportunities and prepared customized sponsorship proposals for corporate targets.',
-      'Coordinated with regional teams to align outreach strategies and share leads across the national network.',
-      'Contributed to growing the sponsorship portfolio by converting cold outreach into confirmed partnerships.',
-    ],
-  },
-  {
     id: 7, role: 'Company Representative', company: 'Trikaya', type: 'Internship',
-    duration: 'Oct 2025 - Present', initials: 'TK',
-    tags: ['Remote', 'Brand Representation', 'Communication', 'Internship'],
-    highlight: 'Remote brand representative managing external company communications.',
-    points: [
-      'Represented Trikaya in a remote capacity, acting as a primary external point of contact for clients and partners.',
-      'Facilitated clear communication between internal teams and external stakeholders to maintain project alignment.',
-      'Ensured brand voice and messaging consistency across all external-facing interactions and materials.',
-      'Supported business operations remotely, contributing to client relationship management and follow-up processes.',
-    ],
+    location: 'Remote', duration: 'Oct 2025 – Dec 2025', initials: 'TR',
+    accent: '#f59e0b', glow: 'rgba(245,158,11,', isPresent: false,
+    tags: ['Events', 'Business Dev', 'Networking'],
+    points: ['Represented Trikaya at events, organized Hack2Hire Hackathon 2025, managed partnerships'],
+  },
+  {
+    id: 1, role: 'Cloud Arcade Facilitator', company: 'Google Cloud', type: 'Program 2025',
+    location: 'Remote', duration: 'Apr 2025 – Oct 2025', initials: 'GC',
+    accent: '#4ade80', glow: 'rgba(74,222,128,', isPresent: false,
+    tags: ['Cloud', 'AI', 'Education', 'GCP'],
+    points: ['Facilitated GCP learning programs, guided 100+ students through Google Cloud certifications, organized AI Showcase events'],
+  },
+  {
+    id: 5, role: 'Junior Manager', company: 'AIESEC', type: null,
+    location: 'Bhopal', duration: 'Jan 2025 – Present', initials: 'AI',
+    accent: '#818cf8', glow: 'rgba(129,140,248,', isPresent: true,
+    tags: ['Leadership', 'International', 'NGO'],
+    points: ['Managed international youth exchange projects, coordinated with global partners, led campus outreach'],
+  },
+  {
+    id: 6, role: 'Co-founder', company: 'Pixel Room', type: 'LNCT Bhopal',
+    location: 'Bhopal', duration: '2025 – Present', initials: 'PR',
+    accent: '#2dd4bf', glow: 'rgba(45,212,191,', isPresent: true,
+    tags: ['Community', 'Gaming', 'Events', 'Leadership'],
+    points: ['First student gaming community at LNCT, organized tournaments & meetups, managed community growth'],
+  },
+  {
+    id: 3, role: 'Asset Development Lead', company: 'REFFTO', type: null,
+    location: 'Remote', duration: 'Apr 2024 – Jun 2024', initials: 'RF',
+    accent: '#f87171', glow: 'rgba(248,113,113,', isPresent: false,
+    tags: ['Blender', '3D Rendering', 'Pipeline', 'Team Lead'],
+    points: ['End-to-end 3D rendering in Blender, pipeline standards reducing revision cycles, optimized render settings'],
   },
 ];
 
-export const WorkExperience = () => {
-  const { ref, isVisible } = useScrollAnimation(0.2);
-  const [selectedId, setSelectedId] = useState(1);
-  const [animKey,    setAnimKey]    = useState(1);
+/* ══ BUILDING COLUMN ═════════════════════════════════════════════════════
+   Renders as a tall flex column that matches the full card-list height.
+   Each floor is a flex item that grows to fill its share of the height.
+ ══════════════════════════════════════════════════════════════════════ */
+const Building = ({ activeIdx, totalHeight }: { activeIdx: number; totalHeight: number }) => {
+  const BUILDING_W = 150;
+  const LABEL_W = 66
+  const total = experiences.length;
 
-  const selected = experiences.find((e) => e.id === selectedId);
-
-  function handleSelect(id: number) {
-    if (id === selectedId) return;
-    setSelectedId(id);
-    setAnimKey((k) => k + 1);
-  }
+  // Each floor height = totalHeight / total (minus a gap)
+  const GAP = 8;
+  const floorH = totalHeight > 0 ? Math.max(60, (totalHeight - (total - 1) * GAP) / total) : 100;
 
   return (
-    <section id="work-experience" className="relative overflow-hidden" style={{
-      padding: 'clamp(3rem, 6vw, 6rem) clamp(1rem, 4vw, 1.5rem)',
-    }}>
-      <div className="absolute inset-0 bg-[#0D1117]" />
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', width: BUILDING_W + LABEL_W + 8 }}>
 
-      <div ref={ref} className="relative z-10 max-w-6xl mx-auto">
+      {/* Antenna */}
+      
 
-        {/* Section Header */}
-        <div className={`text-center mb-16 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}>
-          <p className="text-sm font-medium tracking-widest uppercase text-red-600/70 mb-4"
-            style={{ fontFamily: 'Outfit, sans-serif' }}>
-            My Professional Journey
-          </p>
-          <h2 className="font-bold text-white mb-4" style={{
-            fontFamily: 'FuturaCyrillicBold, sans-serif',
-            fontSize: 'clamp(2rem, 6vw, 3.75rem)',
-          }}>
-            Work Experience
-          </h2>
-          <div className="w-32 h-1 bg-red-600 mx-auto rounded-full shadow-[0_0_20px_rgba(255,0,0,0.5)]" />
+      {/* Floors top-to-bottom (index 0 = newest = top floor) */}
+      {experiences.map((exp, i) => {
+        const isActive = i === activeIdx;
+        const floorNum = total - i; // 05, 04, 03 … label
+        return (
+          <div key={exp.id} style={{ display: 'flex', alignItems: 'center', marginBottom: i < total - 1 ? GAP : 0 }}>
+            {/* Floor block */}
+            <div style={{
+              width: BUILDING_W,
+              height: floorH,
+              borderRadius: 4,
+              background: isActive
+                ? `linear-gradient(135deg, ${exp.accent}28, ${exp.accent}10)`
+                : 'rgba(255,255,255,0.03)',
+              border: `1px solid ${isActive ? exp.accent + '66' : 'rgba(255,255,255,0.09)'}`,
+              boxShadow: isActive ? `0 0 22px ${exp.glow}0.22), inset 0 0 14px ${exp.glow}0.06)` : 'none',
+              transition: 'all 0.45s ease',
+              position: 'relative',
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              gap: 6,
+              padding: '0 10px',
+            }}>
+              {/* Top accent bar */}
+              {isActive && (
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${exp.accent}, transparent)`, borderRadius: '4px 4px 0 0' }} />
+              )}
+              {/* 2 rows of 3 windows */}
+              {[0, 1].map(row => (
+                <div key={row} style={{ display: 'flex', gap: 7, justifyContent: 'center' }}>
+                  {[0, 1, 2].map(col => (
+                    <div key={col} style={{
+                      width: 18, height: row === 0 ? 12 : 9,
+                      borderRadius: 2,
+                      background: isActive ? exp.accent + 'cc' : 'rgba(255,255,255,0.08)',
+                      boxShadow: isActive ? `0 0 6px ${exp.glow}0.6)` : 'none',
+                      transition: 'all 0.4s ease',
+                    }} />
+                  ))}
+                </div>
+              ))}
+              {/* Initials on active */}
+              {isActive && (
+                <div style={{
+                  position: 'absolute', bottom: 4, right: 6,
+                  fontFamily: 'monospace', fontSize: '0.52rem',
+                  color: exp.accent, letterSpacing: '0.06em', opacity: 0.75,
+                }}>
+                  {exp.initials}
+                </div>
+              )}
+            </div>
+
+            {/* Floor label */}
+            <div style={{
+              width: LABEL_W, paddingLeft: 6,
+              fontFamily: 'monospace', fontSize: '0.62rem',
+              color: isActive ? exp.accent : 'rgba(255,255,255,0.22)',
+              letterSpacing: '0.06em',
+              transition: 'color 0.35s',
+              whiteSpace: 'nowrap' as const,
+            }}>
+              {String(floorNum).padStart(2,'0')}F
+            </div>
+          </div>
+        );
+      })}
+
+      {/* Ground slab */}
+      <div style={{ width: BUILDING_W, height: 8, background: 'rgba(255,255,255,0.10)', borderRadius: 3, marginTop: 4 }} />
+    </div>
+  );
+};
+
+/* ══ EXPERIENCE CARD ═════════════════════════════════════════════════════ */
+const ExperienceCard = ({
+  exp, index, cardRef,
+}: {
+  exp: Experience; index: number; cardRef: (el: HTMLDivElement | null) => void;
+}) => {
+  const innerRef = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+  const [hovered, setHovered] = useState(false);
+
+  useEffect(() => {
+    const el = innerRef.current;
+    if (!el) return;
+    cardRef(el);
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setVisible(true); },
+      { threshold: 0.25 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [cardRef]);
+
+  return (
+    <div
+      ref={innerRef}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        borderRadius: '0.85rem',
+        background: hovered ? 'rgba(255,255,255,0.055)' : 'rgba(255,255,255,0.028)',
+        border: `1px solid ${hovered ? exp.glow + '0.35)' : 'rgba(240, 3, 3, 0.08)'}`,
+        borderLeft: `3px solid ${hovered ? exp.accent : exp.accent + '55'}`,
+        boxShadow: hovered ? `0 8px 40px rgba(0,0,0,0.5), 0 0 1px ${exp.glow}0.12)` : '0 4px 16px rgba(0,0,0,0.25)',
+        padding: 'clamp(1.1rem,2.2vw,1.6rem)',
+        opacity: visible ? 1 : 0,
+        transform: visible ? 'translateY(0)' : 'translateY(24px)',
+        transition: `opacity 0.55s ease ${index * 90}ms, transform 0.55s ease ${index * 90}ms, border-color 0.25s, box-shadow 0.25s`,
+      }}
+    >
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1.9rem', marginBottom: '1.75rem' }}>
+        {/* Avatar */}
+        <div style={{
+          flexShrink: 0, width:56, height: 56, borderRadius: '0.55rem',
+          background: `linear-gradient(135deg, ${exp.accent}30, ${exp.accent}14)`,
+          border: `1.5px solid ${exp.accent}50`,
+          boxShadow: `0 0 16px ${exp.glow}0.25)`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontFamily: 'FuturaCyrillicBold, sans-serif',
+          fontSize: '0.82rem', fontWeight: 700, color: exp.accent,
+        }}>
+          {exp.initials}
         </div>
 
-        {/* Master-Detail Layout */}
-        <div className={`grid grid-cols-1 md:grid-cols-[5fr_8fr] gap-5 transition-all duration-1000 delay-300 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}>
-
-          {/* LEFT — Job List */}
-          <div className="flex flex-col gap-2">
-            {experiences.map((exp, index) => {
-              const isActive = exp.id === selectedId;
-              return (
-                <button
-                  key={exp.id}
-                  onClick={() => handleSelect(exp.id)}
-                  className={`w-full text-left flex items-center gap-4 px-4 py-4 rounded-xl border transition-all duration-300 cursor-pointer ${
-                    isActive
-                      ? 'backdrop-blur-xl bg-white/[0.07] border-blue-400/40 opacity-100 shadow-[0_0_20px_rgba(255,0,0,0.07)]'
-                      : 'bg-white/[0.02] border-white/[0.06] opacity-70 hover:opacity-100 hover:bg-white/[0.05] hover:border-white/20'
-                  }`}
-                  style={{ transitionDelay: isVisible ? `${index * 50}ms` : '0ms' }}
-                >
-                  <span className={`flex-shrink-0 w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold text-white transition-all duration-300 ${
-                    isActive ? 'bg-gradient-to-br from-red-500 to-red-600 shadow-[0_0_14px_rgba(0,240,255,0.45)]' : 'bg-white/10'
-                  }`}>
-                    {exp.initials}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className={`text-base font-semibold truncate transition-colors duration-300 ${isActive ? 'text-white' : 'text-gray-300'}`}
-                      style={{ fontFamily: 'FuturaCyrillicBold, sans-serif' }}>
-                      {exp.role}
-                    </p>
-                    <p className={`text-sm truncate mt-0.5 transition-colors duration-300 ${isActive ? 'text-red-400' : 'text-gray-500'}`}
-                      style={{ fontFamily: 'Outfit, sans-serif' }}>
-                      {exp.company}
-                    </p>
-                  </div>
-                  {isActive && <span className="flex-shrink-0 w-2 h-2 rounded-full bg-red-400 shadow-[0_0_8px_rgba(255,0,0,0.9)]" />}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* RIGHT — Detail Card */}
-          {/* CHANGE: added min-h-0 overflow-hidden so card doesn't blow out on mobile */}
-          <div className="min-h-0">
-            {selected && (
-              <div
-                key={animKey}
-                className="backdrop-blur-xl bg-white/[0.05] rounded-2xl border border-red-400/20 p-8 hover:border-red-400/40 transition-all duration-500 hover:shadow-[0_0_40px_rgba(255,0,0,0.08)]"
-                style={{ animation: 'weSlideIn 0.3s cubic-bezier(0.16,1,0.3,1) both' }}
-              >
-                {/* Card Header */}
-                <div className="flex flex-wrap items-start gap-4 mb-2">
-                  <div className="flex-shrink-0 w-14 h-14 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center text-base font-bold text-white shadow-[0_0_24px_rgba(255,0,0,0.4)]">
-                    {selected.initials}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-white leading-tight" style={{
-                      fontFamily: 'FuturaCyrillicBold, sans-serif',
-                      fontSize: 'clamp(1.2rem, 2.5vw, 1.875rem)',
-                    }}>
-                      {selected.role}
-                    </h3>
-                    <div className="flex flex-wrap items-center gap-2 mt-1.5">
-                      <span className="text-red-400 font-semibold text-lg" style={{ fontFamily: 'Outfit, sans-serif' }}>
-                        {selected.company}
-                      </span>
-                      {selected.type && (
-                        <span className="px-3 py-1 bg-violet-500/20 border border-violet-500/30 rounded-lg text-violet-300 font-mono text-xs">
-                          {selected.type}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <span className="hidden sm:block flex-shrink-0 px-4 py-2 bg-violet-500/20 border border-violet-500/30 rounded-lg text-violet-300 font-mono text-sm whitespace-nowrap">
-                    {selected.duration}
-                  </span>
-                </div>
-
-                {/* Duration — mobile */}
-                <div className="sm:hidden mb-4 mt-2">
-                  <span className="px-3 py-1.5 bg-violet-500/20 border border-violet-500/30 rounded-lg text-violet-300 font-mono text-xs inline-block">
-                    {selected.duration}
-                  </span>
-                </div>
-
-                {/* Highlight */}
-                <p className="text-base text-gray-400 italic mt-4 mb-5 pl-1" style={{ fontFamily: 'Outfit, sans-serif' }}>
-                  {selected.highlight}
-                </p>
-
-                <div className="w-full h-px bg-gradient-to-r from-cyan-400/25 via-violet-500/25 to-transparent mb-6" />
-
-                {/* Points */}
-                <ul className="space-y-4 mb-7">
-                  {selected.points.map((point, i) => (
-                    <li key={i} className="flex items-start gap-3">
-                      <span className="flex-shrink-0 mt-[10px] w-1.5 h-1.5 rounded-full bg-cyan-400/70" />
-                      <p className="text-gray-300 leading-relaxed text-base" style={{ fontFamily: 'Outfit, sans-serif' }}>
-                        {point}
-                      </p>
-                    </li>
-                  ))}
-                </ul>
-
-                {/* Tags */}
-                <div className="flex flex-wrap gap-2 pt-5 border-t border-white/[0.07]">
-                  {selected.tags.map((tag) => (
-                    <span key={tag}
-                      className="px-3 py-1.5 rounded-lg bg-cyan-400/10 border border-cyan-400/20 text-cyan-300/80 text-sm font-medium"
-                      style={{ fontFamily: 'Outfit, sans-serif' }}>
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
+        {/* Role + Company */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <h3 style={{
+            fontFamily: 'FuturaCyrillicBold, Impact, sans-serif',
+            fontSize: 'clamp(2.2rem, 1.7vw, 1.18rem)',
+            fontWeight: 800, color: '#fff', lineHeight: 1.2, margin: '0 0 0.28rem',
+          }}>
+            {exp.role}
+          </h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
+            <span style={{ color: exp.accent, fontWeight: 600, fontSize: '0.88rem', fontFamily: 'Outfit, sans-serif' }}>
+              {exp.company}
+            </span>
+            {exp.type && (
+              <span style={{ padding: '1px 7px', borderRadius: '9999px', background: 'rgba(139,92,246,0.14)', border: '1px solid rgba(139,92,246,0.26)', color: '#c084fc', fontSize: '0.67rem', fontFamily: 'monospace' }}>
+                {exp.type}
+              </span>
             )}
+          </div>
+        </div>
+
+        {/* Date + Location */}
+        <div style={{ flexShrink: 0, textAlign: 'right' }}>
+          <div style={{ padding: '3px 9px', borderRadius: '0.38rem', background: 'rgba(255,255,255,0.045)', border: '1px solid rgba(255,255,255,0.09)', color: exp.isPresent ? '#4ade80' : 'rgba(255,255,255,0.5)', fontSize: '0.7rem', fontFamily: 'monospace', whiteSpace: 'nowrap' as const, marginBottom: '0.22rem' }}>
+            {exp.duration}
+          </div>
+          <div style={{ fontSize: '0.68rem', fontFamily: 'monospace', color: 'rgba(255,255,255,0.28)', textAlign: 'right' }}>
+            {exp.location}
           </div>
         </div>
       </div>
 
+      {/* Divider */}
+      <div style={{ height: 1, background: `linear-gradient(90deg, ${exp.accent}44, transparent)`, marginBottom: '0.75rem' }} />
+
+      {/* Bullet points */}
+      <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 0.9rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        {exp.points.map((pt, i) => (
+          <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.55rem' }}>
+            <span style={{ flexShrink: 0, marginTop: 8, width: 5, height: 5, borderRadius: '50%', background: exp.accent, boxShadow: `0 0 6px ${exp.glow}0.7)`, display: 'inline-block' }} />
+            <p style={{ color: 'rgba(203,213,225,0.80)', fontSize: 'clamp(0.82rem,1.3vw,0.9rem)', lineHeight: 1.65, margin: 0, fontFamily: 'Outfit, sans-serif' }}>
+              {pt}
+            </p>
+          </li>
+        ))}
+      </ul>
+
+      {/* Tags */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.38rem' }}>
+        {exp.tags.map(tag => (
+          <span key={tag} style={{ padding: '3px 10px', borderRadius: '9999px', background: `${exp.glow}0.10)`, border: `1px solid ${exp.glow}0.24)`, color: exp.accent, fontSize: '0.68rem', fontFamily: 'monospace', letterSpacing: '0.05em' }}>
+            {tag}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+/* ══ MAIN EXPORT ═════════════════════════════════════════════════════════ */
+export const WorkExperience = () => {
+  const { ref, isVisible } = useScrollAnimation(0.04);
+  const isDesktop = !useIsMobile(1024);
+  const [activeIdx, setActiveIdx] = useState(0);
+  const cardEls = useRef<(HTMLDivElement | null)[]>([]);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerH, setContainerH] = useState(0);
+
+  // Measure card-list container height for building sizing
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setContainerH(el.offsetHeight));
+    ro.observe(el);
+    setContainerH(el.offsetHeight);
+    return () => ro.disconnect();
+  }, []);
+
+  // Which card is most visible → update active floor
+  useEffect(() => {
+    if (!isDesktop) return;
+    const observers: IntersectionObserver[] = [];
+    const ratios = new Array(experiences.length).fill(0);
+
+    cardEls.current.forEach((el, i) => {
+      if (!el) return;
+      const obs = new IntersectionObserver(([entry]) => {
+        ratios[i] = entry.intersectionRatio;
+        const best = ratios.indexOf(Math.max(...ratios));
+        setActiveIdx(best);
+      }, { threshold: Array.from({ length: 11 }, (_, k) => k / 10) });
+      obs.observe(el);
+      observers.push(obs);
+    });
+    return () => observers.forEach(o => o.disconnect());
+  }, [isDesktop]);
+
+  const registerCard = useCallback((i: number) => (el: HTMLDivElement | null) => {
+    cardEls.current[i] = el;
+  }, []);
+
+  return (
+    <section id="work-experience" style={{ background: '#0a0c18', padding: 'clamp(3rem,5vw,5rem) clamp(1rem,3vw,2rem)', overflow: 'visible' }}>
+      <div ref={ref} style={{ maxWidth: '1400px', margin: '0 auto' }}>
+
+        {/* Header */}
+        <div style={{ marginBottom: '2.5rem', opacity: isVisible?1:0, transform: isVisible?'translateY(0)':'translateY(20px)', transition: 'opacity 0.7s, transform 0.7s' }}>
+          <p style={{ fontFamily: 'Outfit, sans-serif', fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.22em', textTransform: 'uppercase' as const, color: '#ef4444', margin: '0 0 0.5rem' }}>
+            Career
+          </p>
+          <h2 style={{ fontFamily: 'FuturaCyrillicBold, Impact, Arial Black, sans-serif', fontSize: 'clamp(2rem,5vw,3.25rem)', fontWeight: 900, color: '#fff', lineHeight: 1.1, margin: 0, letterSpacing: '-0.02em' }}>
+            Work Experience
+          </h2>
+        </div>
+
+        {/* DESKTOP: building + cards side by side */}
+        {isDesktop ? (
+          <div style={{ display: 'flex', gap: '2.5rem', alignItems: 'flex-start' }}>
+
+            {/* Building — sticky, sized to match card-list height */}
+            <div style={{
+              flexShrink: 0,
+              position: 'sticky',
+              top: '100px',
+              opacity: isVisible ? 1 : 0,
+              transform: isVisible ? 'translateX(0)' : 'translateX(-18px)',
+              transition: 'opacity 0.8s ease 0.2s, transform 0.8s ease 0.2s',
+            }}>
+              <Building activeIdx={activeIdx} totalHeight={containerH} />
+            </div>
+
+            {/* Cards column */}
+            <div ref={containerRef} style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
+              {experiences.map((exp, i) => (
+                <ExperienceCard
+                  key={exp.id}
+                  exp={exp}
+                  index={i}
+                  cardRef={registerCard(i)}
+                />
+              ))}
+            </div>
+          </div>
+        ) : (
+          /* MOBILE: timeline line + cards */
+          <div style={{ paddingLeft: '1.75rem', position: 'relative' }}>
+            <div style={{ position: 'absolute', left: 7, top: 0, bottom: 0, width: 2, background: 'linear-gradient(to bottom, rgba(239,68,68,0.1), rgba(239,68,68,0.45) 20%, rgba(239,68,68,0.35) 80%, rgba(139,92,246,0.1))' }} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
+              {experiences.map((exp, i) => (
+                <div key={exp.id} style={{ position: 'relative' }}>
+                  <div style={{ position: 'absolute', left: 'calc(-1.75rem + 0.5px)', top: '1.4rem', transform: 'translateX(-50%)', width: 13, height: 13, borderRadius: '50%', background: exp.accent, border: '2.5px solid #0a0c18', boxShadow: `0 0 10px ${exp.glow}0.7)`, zIndex: 5 }} />
+                  <ExperienceCard exp={exp} index={i} cardRef={registerCard(i)} />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
       <style>{`
-        @keyframes weSlideIn {
-          from { opacity: 0; transform: translateY(12px); }
-          to   { opacity: 1; transform: translateY(0);    }
+        @keyframes antennaPulse {
+          0%,100% { box-shadow: 0 0 6px rgba(239,68,68,0.7); opacity: 1; }
+          50%      { box-shadow: 0 0 16px rgba(239,68,68,1.0); opacity: 0.75; }
         }
       `}</style>
     </section>

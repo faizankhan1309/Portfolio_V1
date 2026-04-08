@@ -55,7 +55,7 @@ export const Research = () => {
     <section id="research" className="relative overflow-hidden" style={{
       padding: 'clamp(3rem, 5vw, 5rem) clamp(1rem, 4vw, 1.5rem)',
     }}>
-      <div className="absolute inset-0 bg-gradient-to-b from-[#1A1300] via-[#0D1117] to-[#1A1300]" />
+      
 
       <div ref={ref} className="relative z-10 max-w-7xl mx-auto">
 

@@ -21,16 +21,12 @@ function App() {
       <Navigation />
       <Hero />
       <Skills />
-      <Videeo />
       <Projects />
       <Research />
       <WorkExperience />
-
-      {/* Gallery pins, Contact slides over it */}
-      <div className="gallery-contact-wrapper" style={{ position: 'relative', height: '200vh' }}>
-        <Gallery />
-        <Contact />
-      </div>
+      <Videeo />
+      <Gallery />
+      <Contact />
 
       <Footer />
     </div>

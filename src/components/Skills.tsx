@@ -1,19 +1,14 @@
 /**
- * Skills.tsx — Responsive
- * Changes applied (no visual redesign):
- *  - ARENA_HEIGHT now uses a CSS var + clamp so the blob row shrinks on mobile
- *  - Blob sizes (POSITION_SIZE) stay the same on desktop; CSS scales the arena container
- *    via transform:scale() on tablet/mobile using a new .skills-arena wrapper class
- *  - Category tab row wraps naturally (already flex-wrap); gap reduced on mobile
- *  - Section heading uses clamp()
- *  - SkillInfoBar max-width is 100% on mobile so it never clips
- *  - Section padding uses clamp()
- *  - No logic, animation, or visual style changes
+ * Skills.tsx — Responsive (3-tier layout)
+ *   Desktop (≥1024px):  original interactive blob arena — UNCHANGED
+ *   Tablet (768–1023px): 2-column grid of skill category panels
+ *   Mobile (<768px):    vertical accordion — tap to expand/collapse with smooth CSS transition
  */
 
-import { useState, useCallback } from 'react';
-import { Brain, Code, Palette, Wrench } from 'lucide-react';
+import { useState, useCallback, useEffect, useRef } from 'react';
+import { Brain, Code, Palette, Wrench, ChevronDown, ChevronUp } from 'lucide-react';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
+import { useIsMobile } from '../hooks/useIsMobile';
 
 /* ══ LOGO REGISTRY (unchanged) ══════════════════════════════════════════ */
 const LOGO_URL: Record<string, { src: string; invert?: boolean }> = {
@@ -70,7 +65,6 @@ const OVERLAP_PX       = 24;
 const ARENA_HEIGHT     = 340;
 const FLOAT_DELAYS     = [0, -1.2, -2.4, -0.6, -1.8, -3.0, -0.9];
 
-/* ══ LAYOUT BUILDER (unchanged) ════════════════════════════════════════ */
 interface PositionedSkill {
   skill: Skill; side: 'left'|'right'; posIndex: number;
   size: number; opacity: number; zIndex: number; floatDelay: number;
@@ -226,7 +220,7 @@ const CenterCard = ({ name, shadow, accent, entering }: {
   </div>
 );
 
-/* ══ BOTTOM INFO BAR (unchanged logic, responsive width) ════════════════ */
+/* ══ BOTTOM INFO BAR (unchanged) ════════════════════════════════════════ */
 const SkillInfoBar = ({ skill, accent, shadow }: {
   skill: Skill | null; accent: string; shadow: string;
 }) => (
@@ -244,7 +238,6 @@ const SkillInfoBar = ({ skill, accent, shadow }: {
       borderRadius: 16, padding: '1rem 1.6rem',
       backdropFilter: 'blur(24px)',
       boxShadow: `0 8px 40px rgba(0,0,0,0.55), 0 0 0 1px ${shadow}0.08)`,
-      /* CHANGE: was 680 fixed → clamp so it doesn't overflow on mobile */
       maxWidth: 'min(680px, 100%)', margin: '0 auto',
     }}>
       <div style={{
@@ -291,7 +284,7 @@ const SkillInfoBar = ({ skill, accent, shadow }: {
 const CATEGORIES = [
   {
     id: 'ai', name: 'AI & Machine Learning', icon: Brain,
-    accent: '#ff0000', shadow: 'rgba(255,0,0,',
+    accent: '#ff3333', shadow: 'rgba(255,0,0,',
     skills: [
       { name: 'Python',       desc: 'ML models, automation & data pipelines',   tier: 'xl' },
       { name: 'TensorFlow',   desc: 'Deep learning model training & deployment', tier: 'lg' },
@@ -340,12 +333,281 @@ const CATEGORIES = [
   },
 ];
 
+/* ══ TIER LABEL ════════════════════════════════════════════════════════ */
+const tierLabel = (t: SkillTier) =>
+  t === 'xl' ? 'EXPERT' : t === 'lg' ? 'ADVANCED' : t === 'md' ? 'PROFICIENT' : 'FAMILIAR';
+
+/* ══ MOBILE ACCORDION ══════════════════════════════════════════════════
+   Matches the design in the screenshot:
+   - Dark card with colored border when open
+   - Icon badge + category title in header
+   - Skill chips: logo icon (left) + name + tier label (stacked right)
+   - 2-3 column auto-fill grid inside
+ ══════════════════════════════════════════════════════════════════════ */
+const MobileAccordion = ({ visible }: { visible: boolean }) => {
+  const [openId, setOpenId] = useState<string | null>('ai');
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+      {CATEGORIES.map((cat, ci) => {
+        const Icon = cat.icon;
+        const isOpen = openId === cat.id;
+        const bodyRef = useRef<HTMLDivElement>(null);
+
+        // Smooth height animation
+        useEffect(() => {
+          const el = bodyRef.current;
+          if (!el) return;
+          el.style.maxHeight = isOpen ? el.scrollHeight + 'px' : '0px';
+        }, [isOpen]);
+
+        return (
+          <div
+            key={cat.id}
+            style={{
+              borderRadius: '0.85rem',
+              border: `1.5px solid ${isOpen ? cat.shadow + '0.55)' : 'rgba(255,255,255,0.09)'}`,
+              background: isOpen
+                ? `linear-gradient(135deg, ${cat.shadow}0.08), rgba(10,12,20,0.95))`
+                : 'rgba(255,255,255,0.03)',
+              overflow: 'hidden',
+              transition: 'border-color 0.3s, background 0.3s, opacity 0.6s, transform 0.6s',
+              opacity: visible ? 1 : 0,
+              transform: visible ? 'translateY(0)' : 'translateY(16px)',
+              transitionDelay: `${ci * 70}ms`,
+              boxShadow: isOpen
+                ? `0 4px 32px ${cat.shadow}0.18), 0 0 0 1px ${cat.shadow}0.10)`
+                : 'none',
+            }}
+          >
+            {/* ── Header button ── */}
+            <button
+              onClick={() => setOpenId(prev => prev === cat.id ? null : cat.id)}
+              aria-expanded={isOpen}
+              style={{
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '0.9rem 1rem',
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                gap: '0.75rem',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem' }}>
+                {/* Icon badge */}
+                <div style={{
+                  width: 38,
+                  height: 38,
+                  borderRadius: '0.5rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: `${cat.shadow}0.15)`,
+                  border: `1.5px solid ${cat.shadow}0.35)`,
+                  boxShadow: isOpen ? `0 0 14px ${cat.shadow}0.30)` : 'none',
+                  transition: 'box-shadow 0.3s',
+                  flexShrink: 0,
+                }}>
+                  <Icon size={19} style={{ color: cat.accent }} />
+                </div>
+
+                {/* Category name */}
+                <span style={{
+                  fontFamily: 'FuturaCyrillicBold, Impact, sans-serif',
+                  fontSize: '0.95rem',
+                  fontWeight: 700,
+                  color: isOpen ? '#ffffff' : 'rgba(255,255,255,0.72)',
+                  letterSpacing: '0.03em',
+                  textAlign: 'left',
+                  transition: 'color 0.25s',
+                }}>
+                  {cat.name}
+                </span>
+              </div>
+
+              {/* Chevron */}
+              <div style={{
+                color: isOpen ? cat.accent : 'rgba(255,255,255,0.35)',
+                transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                transition: 'transform 0.3s cubic-bezier(0.34,1.56,0.64,1), color 0.25s',
+                flexShrink: 0,
+              }}>
+                <ChevronDown size={18} />
+              </div>
+            </button>
+
+            {/* ── Collapsible skill grid ── */}
+            <div
+              ref={bodyRef}
+              style={{
+                maxHeight: '0px',
+                overflow: 'hidden',
+                transition: 'max-height 0.42s cubic-bezier(0.4, 0, 0.2, 1)',
+              }}
+            >
+              <div style={{
+                padding: '0.25rem 0.9rem 1rem',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))',
+                gap: '0.5rem',
+              }}>
+                {cat.skills.map((skill, si) => (
+                  <div
+                    key={skill.name}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      padding: '0.5rem 0.65rem',
+                      borderRadius: '0.5rem',
+                      background: 'rgba(255,255,255,0.04)',
+                      border: `1px solid ${cat.shadow}0.20)`,
+                      // Staggered fade-in when expanded
+                      animation: isOpen ? `skillFadeIn 0.35s ease both` : 'none',
+                      animationDelay: `${si * 45}ms`,
+                    }}
+                  >
+                    {/* Logo */}
+                    <div style={{
+                      width: 28,
+                      height: 28,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                    }}>
+                      <Logo name={skill.name} size={32} />
+                    </div>
+
+                    {/* Name + tier */}
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        color: '#ffffff',
+                        fontFamily: 'monospace',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        lineHeight: 1.3,
+                      }}>
+                        {skill.name}
+                      </div>
+                      <div style={{
+                        fontSize: '0.58rem',
+                        color: cat.accent,
+                        fontFamily: 'monospace',
+                        letterSpacing: '0.05em',
+                        marginTop: '2px',
+                        lineHeight: 1,
+                      }}>
+                        {tierLabel(skill.tier)}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+/* ══ TABLET GRID (768–1023px) ══════════════════════════════════════════ */
+const TabletGrid = ({ visible }: { visible: boolean }) => (
+  <div style={{
+    display: 'grid',
+    gridTemplateColumns: 'repeat(2, 1fr)',
+    gap: '1.25rem',
+  }}>
+    {CATEGORIES.map((cat, ci) => {
+      const Icon = cat.icon;
+      return (
+        <div
+          key={cat.id}
+          style={{
+            borderRadius: '1rem',
+            border: `1px solid ${cat.shadow}0.25)`,
+            background: `${cat.shadow}0.05)`,
+            backdropFilter: 'blur(14px)',
+            padding: '1.4rem',
+            transition: 'opacity 0.7s, transform 0.7s',
+            opacity: visible ? 1 : 0,
+            transform: visible ? 'translateY(0)' : 'translateY(24px)',
+            transitionDelay: `${ci * 100}ms`,
+            boxShadow: `0 4px 24px rgba(0,0,0,0.35), 0 0 0 1px ${cat.shadow}0.08)`,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1rem' }}>
+            <div style={{
+              width: 36, height: 36, borderRadius: '0.5rem',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: `${cat.shadow}0.12)`,
+              border: `1px solid ${cat.shadow}0.28)`,
+            }}>
+              <Icon size={18} style={{ color: cat.accent }} />
+            </div>
+            <h3 style={{
+              fontFamily: 'FuturaCyrillicBold, Impact, sans-serif',
+              fontSize: '0.85rem', fontWeight: 700, color: '#ffffff',
+              letterSpacing: '0.06em', textTransform: 'uppercase', margin: 0,
+            }}>
+              {cat.name}
+            </h3>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.6rem' }}>
+            {cat.skills.map((skill, si) => (
+              <div
+                key={skill.name}
+                title={`${skill.name} — ${tierLabel(skill.tier)}`}
+                style={{
+                  display: 'flex', flexDirection: 'column', alignItems: 'center',
+                  gap: '0.3rem', padding: '0.55rem 0.35rem',
+                  borderRadius: '0.45rem',
+                  background: 'rgba(255,255,255,0.03)',
+                  border: `1px solid ${cat.shadow}0.12)`,
+                  cursor: 'default', transition: 'background 0.2s, border-color 0.2s',
+                  animation: `skillFadeIn 0.45s ease both`,
+                  animationDelay: visible ? `${ci * 80 + si * 40}ms` : '0ms',
+                }}
+              >
+                <Logo name={skill.name} size={36} />
+                <span style={{
+                  fontSize: '0.6rem', color: 'rgba(255,255,255,0.65)',
+                  fontFamily: 'monospace', textAlign: 'center', lineHeight: 1.2,
+                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%',
+                }}>
+                  {skill.name}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          <div style={{
+            marginTop: '1rem', height: '2px', borderRadius: 99,
+            background: `linear-gradient(90deg, ${cat.accent}, transparent)`, opacity: 0.5,
+          }} />
+        </div>
+      );
+    })}
+  </div>
+);
+
 /* ══ MAIN EXPORT ════════════════════════════════════════════════════════ */
 export const Skills = () => {
   const [activeId,     setActiveId]     = useState('ai');
   const [entering,     setEntering]     = useState(false);
   const [hoveredSkill, setHoveredSkill] = useState<Skill | null>(null);
   const { ref, isVisible } = useScrollAnimation(0.1);
+
+  const isMobileOrTablet = useIsMobile(1023);
+  const isMobile = useIsMobile(767);
 
   const category = CATEGORIES.find(c => c.id === activeId)!;
   const { leftBlobs, rightBlobs } = buildSymmetricLayout(category.skills);
@@ -359,20 +621,21 @@ export const Skills = () => {
 
   return (
     <section id="skills" className="relative overflow-hidden bg-[#080B12]" style={{
-      /* CHANGE: was py-24 px-6 fixed → fluid clamp */
       padding: 'clamp(3rem, 6vw, 6rem) clamp(1rem, 4vw, 1.5rem)',
     }}>
-      {/* Ambient glow */}
-      <div style={{
-        position: 'absolute', inset: 0, pointerEvents: 'none',
-        background: `radial-gradient(ellipse 70% 65% at 50% 50%, ${category.shadow}0.08) 0%, transparent 72%)`,
-        transition: 'background 1s ease',
-      }}/>
+      {/* Ambient glow — desktop only */}
+      {!isMobileOrTablet && (
+        <div style={{
+          position: 'absolute', inset: 0, pointerEvents: 'none',
+          background: `radial-gradient(ellipse 70% 65% at 50% 50%, ${category.shadow}0.08) 0%, transparent 72%)`,
+          transition: 'background 1s ease',
+        }}/>
+      )}
 
       <div ref={ref} className="relative z-10 max-w-7xl mx-auto">
 
         {/* Title */}
-        <div className={`text-center mb-12 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+        <div className={`text-center mb-10 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
           <h2
             className="font-bold text-white mb-4 tracking-widest"
             style={{ fontFamily: 'FuturaCyrillicBold, Impact, sans-serif', fontSize: 'clamp(2rem, 6vw, 3.75rem)' }}
@@ -382,95 +645,103 @@ export const Skills = () => {
           <div className="w-28 h-1 bg-red-600 mx-auto rounded-full" />
         </div>
 
-        {/* Category tabs */}
-        <div className={`flex flex-wrap justify-center gap-2 mb-10 transition-all duration-1000 delay-100 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-          {CATEGORIES.map(cat => {
-            const Icon = cat.icon;
-            const active = cat.id === activeId;
-            return (
-              <button
-                key={cat.id}
-                onClick={() => switchTab(cat.id)}
-                style={{
-                  /* CHANGE: fluid padding */
-                  padding: 'clamp(0.5rem, 1.2vw, 0.75rem) clamp(0.75rem, 2vw, 1.7rem)',
-                  borderRadius: '0.55rem',
-                  border: `1.5px solid ${active ? cat.accent : 'rgba(255,255,255,0.12)'}`,
-                  background: active ? `${cat.shadow}0.13)` : 'transparent',
-                  color: active ? cat.accent : 'rgba(255,255,255,0.38)',
-                  fontWeight: 600,
-                  fontSize: 'clamp(0.75rem, 1.5vw, 0.95rem)',
-                  letterSpacing: '0.03em', cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', gap: '0.55rem',
-                  boxShadow: active ? `0 0 20px ${cat.shadow}0.28)` : 'none',
-                  transition: 'all 0.25s', position: 'relative', zIndex: 100,
-                }}
-              >
-                <Icon size={18}/>{cat.name}
-              </button>
-            );
-          })}
-        </div>
+        {/* ── MOBILE: Accordion ── */}
+        {isMobile && (
+          <MobileAccordion visible={isVisible} />
+        )}
 
-        {/* Arena */}
-        <div
-          className={`transition-opacity duration-700 skills-arena-wrap ${isVisible ? 'opacity-100' : 'opacity-0'}`}
-          style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
-        >
-          {/* Blob row */}
-          <div style={{
-            position: 'relative', display: 'flex',
-            alignItems: 'center', justifyContent: 'center',
-            width: '100%', height: ARENA_HEIGHT,
-          }}>
-            {/* Center ambient pulse */}
-            <div style={{
-              position: 'absolute', left: '50%', top: '50%',
-              transform: 'translate(-50%,-50%)',
-              width: 900, height: 280, borderRadius: '50%',
-              background: `radial-gradient(ellipse, ${category.shadow}0.11) 0%, transparent 60%)`,
-              filter: 'blur(65px)', pointerEvents: 'none',
-              animation: 'centerPulse 5s ease-in-out infinite', transition: 'background 0.9s',
-            }}/>
+        {/* ── TABLET: 2-column grid ── */}
+        {!isMobile && isMobileOrTablet && (
+          <TabletGrid visible={isVisible} />
+        )}
 
-            <div style={{
-              display: 'flex', flexDirection: 'row',
-              alignItems: 'center', justifyContent: 'center',
-              position: 'relative', zIndex: 10,
-            }}>
-              <BlobGroup
-                blobs={leftBlobs} leftSide={true} shadow={category.shadow}
-                entering={entering} isVisible={isVisible}
-                onHover={setHoveredSkill} baseAnimIndex={0}
-              />
-              <div style={{ marginLeft: -OVERLAP_PX / 2, marginRight: -OVERLAP_PX / 2, zIndex: 25 }}>
-                <CenterCard
-                  name={category.name} shadow={category.shadow}
-                  accent={category.accent} entering={entering}
-                />
-              </div>
-              <BlobGroup
-                blobs={rightBlobs} leftSide={false} shadow={category.shadow}
-                entering={entering} isVisible={isVisible}
-                onHover={setHoveredSkill} baseAnimIndex={leftBlobs.length}
-              />
+        {/* ── DESKTOP: Original blob arena ── */}
+        {!isMobileOrTablet && (
+          <>
+            <div className={`flex flex-wrap justify-center gap-2 mb-10 transition-all duration-1000 delay-100 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+              {CATEGORIES.map(cat => {
+                const Icon = cat.icon;
+                const active = cat.id === activeId;
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => switchTab(cat.id)}
+                    style={{
+                      padding: 'clamp(0.5rem, 1.2vw, 0.75rem) clamp(0.75rem, 2vw, 1.7rem)',
+                      borderRadius: '0.55rem',
+                      border: `1.5px solid ${active ? cat.accent : 'rgba(255,255,255,0.12)'}`,
+                      background: active ? `${cat.shadow}0.13)` : 'transparent',
+                      color: active ? cat.accent : 'rgba(255,255,255,0.38)',
+                      fontWeight: 600, fontSize: 'clamp(0.75rem, 1.5vw, 0.95rem)',
+                      letterSpacing: '0.03em', cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', gap: '0.55rem',
+                      boxShadow: active ? `0 0 20px ${cat.shadow}0.28)` : 'none',
+                      transition: 'all 0.25s', position: 'relative', zIndex: 100,
+                    }}
+                  >
+                    <Icon size={18}/>{cat.name}
+                  </button>
+                );
+              })}
             </div>
 
-            <p style={{
-              position: 'absolute', bottom: 4, left: '52%',
-              transform: 'translateX(-50%)',
-              color: hoveredSkill ? 'transparent' : 'rgba(255,255,255,0.22)',
-              fontSize: 13.5, fontFamily: 'monospace',
-              letterSpacing: '0.2em', textTransform: 'uppercase',
-              whiteSpace: 'nowrap', pointerEvents: 'none', transition: 'color 0.2s',
-            }}>
-              hover a skill to explore
-            </p>
-          </div>
+            <div
+              className={`transition-opacity duration-700 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
+              style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+            >
+              <div style={{
+                position: 'relative', display: 'flex',
+                alignItems: 'center', justifyContent: 'center',
+                width: '100%', height: ARENA_HEIGHT,
+              }}>
+                <div style={{
+                  position: 'absolute', left: '50%', top: '50%',
+                  transform: 'translate(-50%,-50%)',
+                  width: 900, height: 280, borderRadius: '50%',
+                  background: `radial-gradient(ellipse, ${category.shadow}0.11) 0%, transparent 60%)`,
+                  filter: 'blur(65px)', pointerEvents: 'none',
+                  animation: 'centerPulse 5s ease-in-out infinite', transition: 'background 0.9s',
+                }}/>
 
-          {/* Bottom info bar */}
-          <SkillInfoBar skill={hoveredSkill} accent={category.accent} shadow={category.shadow} />
-        </div>
+                <div style={{
+                  display: 'flex', flexDirection: 'row',
+                  alignItems: 'center', justifyContent: 'center',
+                  position: 'relative', zIndex: 10,
+                }}>
+                  <BlobGroup
+                    blobs={leftBlobs} leftSide={true} shadow={category.shadow}
+                    entering={entering} isVisible={isVisible}
+                    onHover={setHoveredSkill} baseAnimIndex={0}
+                  />
+                  <div style={{ marginLeft: -OVERLAP_PX / 2, marginRight: -OVERLAP_PX / 2, zIndex: 25 }}>
+                    <CenterCard
+                      name={category.name} shadow={category.shadow}
+                      accent={category.accent} entering={entering}
+                    />
+                  </div>
+                  <BlobGroup
+                    blobs={rightBlobs} leftSide={false} shadow={category.shadow}
+                    entering={entering} isVisible={isVisible}
+                    onHover={setHoveredSkill} baseAnimIndex={leftBlobs.length}
+                  />
+                </div>
+
+                <p style={{
+                  position: 'absolute', bottom: 4, left: '52%',
+                  transform: 'translateX(-50%)',
+                  color: hoveredSkill ? 'transparent' : 'rgba(255,255,255,0.22)',
+                  fontSize: 13.5, fontFamily: 'monospace',
+                  letterSpacing: '0.2em', textTransform: 'uppercase',
+                  whiteSpace: 'nowrap', pointerEvents: 'none', transition: 'color 0.2s',
+                }}>
+                  hover a skill to explore
+                </p>
+              </div>
+
+              <SkillInfoBar skill={hoveredSkill} accent={category.accent} shadow={category.shadow} />
+            </div>
+          </>
+        )}
       </div>
 
       <style>{`
@@ -483,24 +754,9 @@ export const Skills = () => {
           0%,100% { opacity:0.75; transform:translate(-50%,-50%) scale(1);    }
           50%     { opacity:1;    transform:translate(-50%,-50%) scale(1.07); }
         }
-
-        /* ══ TABLET: scale the blob arena down so it fits without horizontal scroll */
-        @media (max-width: 1024px) {
-          .skills-arena-wrap { overflow-x: hidden; }
-          .skills-arena-wrap > div:first-child {
-            transform: scale(0.72);
-            transform-origin: center top;
-            /* compensate for scale so section doesn't have huge white space */
-            margin-bottom: -${Math.round(ARENA_HEIGHT * 0.28)}px;
-          }
-        }
-        /* ══ MOBILE */
-        @media (max-width: 640px) {
-          .skills-arena-wrap > div:first-child {
-            transform: scale(0.48);
-            transform-origin: center top;
-            margin-bottom: -${Math.round(ARENA_HEIGHT * 0.52)}px;
-          }
+        @keyframes skillFadeIn {
+          from { opacity: 0; transform: translateY(8px); }
+          to   { opacity: 1; transform: translateY(0);   }
         }
       `}</style>
     </section>

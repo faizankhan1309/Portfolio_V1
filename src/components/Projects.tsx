@@ -1,225 +1,293 @@
 /**
- * Projects.tsx — Responsive
- * Changes:
- *  - Floating side thumbnail (-250px absolute) hidden below 1280px (was only md:block ~768px
- *    but at tablet widths it still caused overflow). Hidden at <1280px via media-class swap.
- *  - Section padding uses clamp()
- *  - Heading uses clamp()
- *  - Grid stays 2-col on tablet, 1-col on mobile (existing behavior unchanged)
- *  - overflow:hidden added to section so the bleed images can't cause horizontal scroll
- *  - No card visual changes
+ * Projects.tsx — Futuristic Featured Work
+ *
+ * Desktop (≥1024px):
+ *   LEFT: Dark "app window" chrome frame:
+ *     - Window title bar (traffic dots, project name, category badge, year)
+ *     - Screenshot fills the frame with scanline + corner-bracket HUD overlay
+ *     - Content overlay (title, full description, tags, Live Demo / GitHub)
+ *     - prev/next arrows + red progress bar + counter
+ *   RIGHT: Scrollable list with active red-border highlight
+ *
+ * Mobile: Card grid
  */
 
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
-import { ArrowUpRight, Brain, Map, Briefcase, CalendarDays, Box, Plane } from 'lucide-react';
+import { ExternalLink, Github, ChevronLeft, ChevronRight, ArrowUpRight } from 'lucide-react';
 
-const projects = [
-  {
-    id: 1,
-    title: 'Indoor Navigation System',
-    description: 'AI-powered indoor navigation for Indian Railways using A* and Dijkstra pathfinding algorithms.',
-    category: 'AI', type: 'ai',
-    tags: ['Python', 'Mapbox', 'Leaflet', 'AI', 'Pathfinding'],
-    impact: ['Real-time positioning inside complex stations', 'Improved route accuracy', 'Scalable indoor mapping'],
-    icon: Map, link: null, image: 'media/indoor.png',
-  },
-  {
-    id: 8,
-    title: 'FloatChat',
-    description: 'AI-powered conversational platform to query and visualize complex oceanographic datasets using natural language.',
-    category: 'AI', type: 'ai',
-    tags: ['LLM', 'NLP', 'Data Visualization', 'AI'],
-    impact: ['Simplified access to complex ocean data', 'Enabled natural language querying', 'Centralized data exploration platform'],
-    icon: Brain, link: null, image: 'media/floatchat.jpg',
-  },
-  {
-    id: 4,
-    title: 'AI Sentiment Analyzer',
-    description: 'NLP model for real-time emotion detection and classification in customer feedback.',
-    category: 'AI', type: 'ai',
-    tags: ['Python', 'TensorFlow', 'NLP', 'Flask'],
-    impact: ['Real-time sentiment classification', 'Business intelligence insights'],
-    icon: Brain, link: null, image: 'media/emotion.svg',
-  },
-  {
-    id: 3,
-    title: 'Local Events & Volunteering',
-    description: 'Community platform connecting users with local events, RSVPs, and volunteering opportunities.',
-    category: 'Web', type: 'web',
-    tags: ['React', 'Web App', 'Community'],
-    impact: ['Increased community engagement', 'Simplified event discovery'],
-    icon: CalendarDays, link: 'https://eventsphere-lemon.vercel.app', image: 'media/event.png',
-  },
-  {
-    id: 2,
-    title: 'Career Assistance Platform',
-    description: 'Web platform for career assessment, job matching, and structured interview preparation.',
-    category: 'Web', type: 'web',
-    tags: ['React', 'Node.js', 'MongoDB'],
-    impact: ['Personalized career insights', 'Structured job prep workflow'],
-    icon: Briefcase, link: null,
-    image: 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=600&q=60',
-  },
-  {
-    id: 5,
-    title: '3D Product Visualization',
-    description: 'Photorealistic drone renders for REFFTO marketing campaigns using Blender Cycles.',
-    category: '3D', type: 'design',
-    tags: ['Blender', 'Cycles', '3D Modeling'],
-    impact: ['High-quality marketing visuals', 'Improved product presentation'],
-    icon: Box, link: null, image: 'media/3d.jpg',
-  },
-  {
-    id: 6,
-    title: 'Drone Flight Simulator',
-    description: 'Interactive 3D environment for realistic drone product demos and walkthroughs.',
-    category: '3D', type: 'design',
-    tags: ['Blender', 'Unity', 'C#'],
-    impact: ['Realistic simulation experience', 'Product demonstration tool'],
-    icon: Plane, link: null,
-    image: 'https://images.unsplash.com/photo-1508614589041-895b88991e3e?w=600&q=60',
-  },
-  {
-    id: 7,
-    title: 'Portfolio Website',
-    description: 'Personal portfolio website showcasing projects, 3D work, and development skills with a modern UI and interactive design.',
-    category: 'Web', type: 'web',
-    tags: ['React', 'TailwindCSS', 'Framer Motion'],
-    impact: ['Showcases technical and creative work in one place', 'Optimized UI for clarity and engagement', 'Responsive and performance-focused design'],
-    icon: Briefcase, link: null, image: 'media/port.png',
-  },
-  {
-    id: 9,
-    title: 'More Projects Coming...',
-    description: 'Some projects are currently in progress and will be added soon. Stay tuned for updates.',
-    category: 'wip', type: 'wip',
-    tags: ['Work in Progress'],
-    impact: ['Ongoing development', 'New features being built', 'Will be updated soon'],
-    icon: Briefcase, link: null, image: 'media/coming.png',
-  },
+interface Project {
+  id: number; title: string; description: string;
+  category: string; type: string; tags: string[];
+  link: string | null; github: string | null;
+  image: string; year: string;
+}
+
+const projects: Project[] = [
+  { id: 1, title: 'Indoor Navigation System', year: '2024',
+    description: 'Real-time indoor positioning for Indian Railways using A* and Dijkstra pathfinding on custom Mapbox/Leaflet layers. Sub-meter accuracy, multi-floor support.',
+    category: 'AI', type: 'ai', tags: ['Python', 'Mapbox', 'A* Algorithm', 'Leaflet'],
+    link: null, github: null, image: 'media/indoor.png' },
+  { id: 8, title: 'FloatChat', year: '2024',
+    description: 'LLM-powered oceanographic data explorer — query complex datasets in plain English, get charts, maps, and summaries. Centralizes siloed ocean data.',
+    category: 'AI', type: 'ai', tags: ['LLM', 'NLP', 'Data Visualization', 'Python'],
+    link: null, github: null, image: 'media/floatchat.jpg' },
+  { id: 4, title: 'AI Sentiment Analyzer', year: '2024',
+    description: 'TensorFlow + Flask pipeline classifying customer feedback into emotion categories in real time. BI dashboard surfaces actionable insights.',
+    category: 'AI', type: 'ai', tags: ['Python', 'TensorFlow', 'Flask', 'NLP'],
+    link: null, github: null, image: 'media/emotion.svg' },
+  { id: 3, title: 'Local Events Platform', year: '2024',
+    description: 'React app connecting communities with nearby events and volunteering. RSVP management, location-based filtering, volunteer matching.',
+    category: 'Web', type: 'web', tags: ['React', 'Node.js', 'MongoDB', 'Community'],
+    link: 'https://eventsphere-lemon.vercel.app', github: null, image: 'media/event.png' },
+  { id: 2, title: 'Career Assistance Platform', year: '2024',
+    description: 'Full-stack platform with AI-driven job matching, personalized career quizzes, and a structured interview prep workflow with tracked progress.',
+    category: 'Web', type: 'web', tags: ['React', 'Node.js', 'MongoDB', 'AI Matching'],
+    link: null, github: null,
+    image: 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=800&q=70' },
+  { id: 5, title: '3D Product Visualization', year: '2024',
+    description: 'Photorealistic drone marketing assets for REFFTO using Blender Cycles — turntable animations, environment composites, social-ready stills.',
+    category: '3D', type: 'design', tags: ['Blender', 'Cycles', '3D Modeling', 'Rendering'],
+    link: null, github: null, image: 'media/3d.jpg' },
+  { id: 6, title: 'Drone Flight Simulator', year: '2024',
+    description: 'Blender + Unity real-time 3D sim for drone product demos. Realistic physics, first-person walkthrough, embeddable web export.',
+    category: '3D', type: 'design', tags: ['Blender', 'Unity', 'C#', 'Physics'],
+    link: null, github: null,
+    image: 'https://images.unsplash.com/photo-1508614589041-895b88991e3e?w=800&q=70' },
+  { id: 7, title: 'Portfolio Website', year: '2025',
+    description: 'React + Tailwind + GSAP scroll-driven portfolio. Pinned hero, parallax depth, glassmorphism cards, masonry gallery, cinematic animations.',
+    category: 'Web', type: 'web', tags: ['React', 'TailwindCSS', 'GSAP', 'Three.js'],
+    link: 'https://faizan-khan.vercel.app', github: null, image: 'media/port.png' },
 ];
 
-const typeConfig: Record<string, { borderColor: string; badgeClass: string; iconClass: string }> = {
-  ai:     { borderColor: 'border-t-red-400',    badgeClass: 'bg-red-400/10 text-red-400 border-red-400/20',         iconClass: 'text-cyan-400'   },
-  web:    { borderColor: 'border-t-blue-400',   badgeClass: 'bg-blue-400/10 text-blue-400 border-blue-400/20',      iconClass: 'text-amber-400'  },
-  design: { borderColor: 'border-t-violet-500', badgeClass: 'bg-violet-500/10 text-violet-400 border-violet-500/20',iconClass: 'text-violet-400' },
-  wip:    { borderColor: 'border-t-green-500',  badgeClass: 'bg-green-500/10 text-green-400 border-green-500/20',   iconClass: 'text-green-400'  },
+const CFG: Record<string, { accent: string; glow: string; badge: React.CSSProperties }> = {
+  ai:     { accent: '#f87171', glow: 'rgba(248,113,113,', badge: { background: 'rgba(248,113,113,0.15)', color: '#f87171', border: '1px solid rgba(248,113,113,0.35)' } },
+  web:    { accent: '#818cf8', glow: 'rgba(129,140,248,', badge: { background: 'rgba(129,140,248,0.15)', color: '#818cf8', border: '1px solid rgba(129,140,248,0.35)' } },
+  design: { accent: '#c084fc', glow: 'rgba(192,132,252,', badge: { background: 'rgba(192,132,252,0.15)', color: '#c084fc', border: '1px solid rgba(192,132,252,0.35)' } },
 };
 
-export const Projects = () => {
-  const { ref, isVisible } = useScrollAnimation(0.1);
+/* Corner HUD brackets */
+const Bracket = ({ pos }: { pos: 'tl'|'tr'|'bl'|'br' }) => {
+  const s = 20; const t = 2; const c = 'rgba(239,68,68,0.5)';
+  const style: React.CSSProperties = { position: 'absolute', width: s, height: s, pointerEvents: 'none', zIndex: 6 };
+  if (pos === 'tl') { style.top = 6; style.left = 6; }
+  if (pos === 'tr') { style.top = 6; style.right = 6; style.transform = 'scaleX(-1)'; }
+  if (pos === 'bl') { style.bottom = 6; style.left = 6; style.transform = 'scaleY(-1)'; }
+  if (pos === 'br') { style.bottom = 6; style.right = 6; style.transform = 'scale(-1)'; }
+  return (
+    <div style={style}>
+      <div style={{ position: 'absolute', top: 0, left: 0, width: s, height: t, background: c }} />
+      <div style={{ position: 'absolute', top: 0, left: 0, width: t, height: s, background: c }} />
+    </div>
+  );
+};
+
+const DesktopFeatured = ({ isVisible }: { isVisible: boolean }) => {
+  const [idx, setIdx] = useState(0);
+  const [fading, setFading] = useState(false);
+  const [shown, setShown] = useState(0);
+  const listRef = useRef<HTMLDivElement>(null);
+  const total = projects.length;
+
+  const goTo = useCallback((i: number) => {
+    if (i === idx || fading) return;
+    setFading(true);
+    setTimeout(() => { setIdx(i); setShown(i); setFading(false); }, 250);
+  }, [idx, fading]);
+
+  const prev = () => goTo(Math.max(0, idx - 1));
+  const next = () => goTo(Math.min(total - 1, idx + 1));
+
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => { if (e.key === 'ArrowUp') { e.preventDefault(); prev(); } if (e.key === 'ArrowDown') { e.preventDefault(); next(); } };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  }, [idx]);
+
+  useEffect(() => {
+    (listRef.current?.querySelector(`[data-i="${idx}"]`) as HTMLElement)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }, [idx]);
+
+  const p = projects[shown];
+  const cfg = CFG[p.type] ?? CFG['ai'];
+  const progress = ((idx + 1) / total) * 100;
 
   return (
-    <section id="projects" className="relative overflow-hidden" style={{
-      padding: 'clamp(3rem, 5vw, 5rem) clamp(1rem, 4vw, 1.5rem)',
-    }}>
-      <div className="absolute inset-0 bg-gradient-to-b from-[#080B12] via-[#0D1117] to-[#080B12]" />
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 540px', gap: 0, borderRadius: '1rem', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0px 0px 60px rgba(56, 3, 202, 0.65)' }}>
 
-      <div ref={ref} className="relative z-10 max-w-7xl mx-auto">
+      {/* LEFT PANEL */}
+      <div style={{ display: 'flex', flexDirection: 'column', background: '#06080f', minHeight: '600px' }}>
 
-        {/* Section Header */}
-        <div className={`text-center mb-12 transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-          <h2
-            className="font-bold text-white mb-4"
-            style={{ fontFamily: 'FuturaCyrillicBold, sans-serif', fontSize: 'clamp(2rem, 6vw, 3.75rem)' }}
-          >
-            SELECTED PROJECTS
-          </h2>
-          <div className="w-28 h-1 bg-red-600 mx-auto rounded-full" />
+        {/* Window chrome bar */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', padding: '0.65rem 1.2rem', background: 'rgba(255,255,255,0.025)', borderBottom: '1px solid rgba(255,255,255,0.07)', flexShrink: 0 }}>
+          {['#ff5f57','#ffbd2e','#28c840'].map((c, i) => (
+            <div key={i} style={{ width: 10, height: 10, borderRadius: '50%', background: c, opacity: 0.75 }} />
+          ))}
+          <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.08)', margin: '0 0.3rem' }} />
+          <span style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: 'rgba(255,255,255,0.45)', letterSpacing: '0.05em', opacity: fading ? 0 : 1, transition: 'opacity 0.25s', flex: 1 }}>
+            {p.title}
+          </span>
+          <span style={{ ...cfg.badge, padding: '2px 9px', borderRadius: '9999px', fontSize: '0.6rem', fontFamily: 'monospace', letterSpacing: '0.12em', textTransform: 'uppercase' as const }}>
+            {p.category}
+          </span>
+          <span style={{ fontFamily: 'monospace', fontSize: '0.62rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '0.1em' }}>{p.year}</span>
         </div>
 
-        {/* Projects Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-9">
-          {projects.map((project, index) => {
-            const config = typeConfig[project.type];
-            const Icon = project.icon;
-            const isLeftCol = index % 2 === 0;
+        {/* Screenshot area */}
+        <div style={{ position: 'relative', flex: '1 1 0', minHeight: 0, overflow: 'hidden' }}>
+          <img
+            key={p.id}
+            src={p.image}
+            alt={p.title}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', opacity: fading ? 0 : 1, transform: fading ? 'scale(1.04)' : 'scale(1)', transition: 'opacity 0.28s, transform 0.28s' }}
+          />
+          {/* Scanline */}
+          <div style={{ position: 'absolute', inset: 0, backgroundImage: 'repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.07) 3px,rgba(0,0,0,0.07) 4px)', pointerEvents: 'none', zIndex: 4 }} />
+          {/* Bottom dark fade */}
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #06080f 0%, rgba(6,8,15,0.72) 42%, rgba(6,8,15,0.1) 70%, transparent 100%)', pointerEvents: 'none', zIndex: 5 }} />
+          {/* Corners */}
+          {(['tl','tr','bl','br'] as const).map(pos => <Bracket key={pos} pos={pos} />)}
+          {/* HUD labels */}
+          <div style={{ position: 'absolute', top: '0.65rem', left: '0.65rem', zIndex: 7, fontFamily: 'monospace', fontSize: '0.58rem', color: 'rgba(239,68,68,0.55)', letterSpacing: '0.14em', textTransform: 'uppercase' as const }}>Preview</div>
+          <div style={{ position: 'absolute', top: '0.65rem', right: '0.65rem', zIndex: 7, fontFamily: 'monospace', fontSize: '0.58rem', color: 'rgba(255,255,255,0.18)', letterSpacing: '0.1em' }}>
+            {String(idx+1).padStart(2,'0')}/{String(total).padStart(2,'0')}
+          </div>
 
+          {/* Content overlay — sits above the gradient */}
+          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 8, padding: '1.4rem 1.75rem 1.2rem', opacity: fading ? 0 : 1, transform: fading ? 'translateY(10px)' : 'translateY(0)', transition: 'opacity 0.25s ease 0.06s, transform 0.25s ease 0.06s' }}>
+            <h3 style={{ fontFamily: 'FuturaCyrillicBold, Impact, sans-serif', fontSize: 'clamp(1.45rem, 2.6vw, 2rem)', fontWeight: 900, color: '#fff', lineHeight: 1.1, margin: '0 0 0.55rem', letterSpacing: '-0.02em', textShadow: '0 2px 24px rgba(0,0,0,0.9)' }}>
+              {p.title}
+            </h3>
+            <p style={{ color: 'rgba(209,213,219,0.80)', fontSize: 'clamp(0.82rem, 1.3vw, 0.95rem)', lineHeight: 1.65, fontFamily: 'Outfit, sans-serif', fontWeight: 300, margin: '0 0 0.9rem', maxWidth: '560px' }}>
+              {p.description}
+            </p>
+            {/* Tags */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.38rem', marginBottom: '1rem' }}>
+              {p.tags.map(tag => (
+                <span key={tag} style={{ padding: '3px 11px', borderRadius: '9999px', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.14)', color: 'rgba(255,255,255,0.62)', fontSize: '0.73rem', fontFamily: 'monospace', letterSpacing: '0.05em', backdropFilter: 'blur(6px)' }}>
+                  {tag}
+                </span>
+              ))}
+            </div>
+            {/* Buttons */}
+            <div style={{ display: 'flex', gap: '0.6rem' }}>
+              {p.link ? (
+                <a href={p.link} target="_blank" rel="noopener noreferrer"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.58rem 1.3rem', borderRadius: '9999px', background: '#ef4444', color: '#fff', fontWeight: 700, fontSize: '0.83rem', fontFamily: 'FuturaCyrillicBold, sans-serif', textDecoration: 'none', boxShadow: '0 0 18px rgba(239,68,68,0.38)', transition: 'opacity 0.2s' }}
+                  onMouseEnter={e => (e.currentTarget.style.opacity='0.82')}
+                  onMouseLeave={e => (e.currentTarget.style.opacity='1')}>
+                  <ExternalLink size={13} /> Live Demo
+                </a>
+              ) : (
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.58rem 1.3rem', borderRadius: '9999px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.11)', color: 'rgba(255,255,255,0.28)', fontSize: '0.83rem', fontFamily: 'monospace' }}>
+                  <ExternalLink size={13} /> No Live Demo
+                </span>
+              )}
+              {p.github && (
+                <a href={p.github} target="_blank" rel="noopener noreferrer"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.58rem 1.3rem', borderRadius: '9999px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.18)', color: '#fff', fontSize: '0.83rem', fontFamily: 'monospace', textDecoration: 'none', transition: 'background 0.2s' }}
+                  onMouseEnter={e => (e.currentTarget.style.background='rgba(255,255,255,0.13)')}
+                  onMouseLeave={e => (e.currentTarget.style.background='rgba(255,255,255,0.07)')}>
+                  <Github size={13} /> GitHub
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Controls bar */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', background: 'rgba(3,4,10,0.98)', borderTop: '1px solid rgba(255,255,255,0.06)', flexShrink: 0 }}>
+          {[{fn: prev, disabled: idx===0, icon: <ChevronLeft size={16}/>}, {fn: next, disabled: idx===total-1, icon: <ChevronRight size={16}/>}].map(({fn,disabled,icon},i) => (
+            <button key={i} onClick={fn} disabled={disabled}
+              style={{ width: 34, height: 34, borderRadius: '50%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: disabled?'not-allowed':'pointer', color: disabled?'rgba(255,255,255,0.15)':'#fff', transition: 'all 0.2s', flexShrink: 0 }}>
+              {icon}
+            </button>
+          ))}
+          <div style={{ flex: 1, height: 2, background: 'rgba(255,255,255,0.08)', borderRadius: '9999px', overflow: 'hidden' }}>
+            <div style={{ height: '100%', width: `${progress}%`, background: '#ef4444', borderRadius: '9999px', transition: 'width 0.4s ease' }} />
+          </div>
+          <span style={{ fontFamily: 'monospace', fontSize: '0.73rem', color: 'rgba(255,255,255,0.32)', letterSpacing: '0.1em', flexShrink: 0 }}>
+            {String(idx+1).padStart(2,'0')} / {String(total).padStart(2,'0')}
+          </span>
+        </div>
+      </div>
+
+      {/* RIGHT: List */}
+      <div style={{ background: 'rgba(7,9,17,0.98)', borderLeft: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ padding: '0.8rem 1.2rem', borderBottom: '1px solid rgba(255,255,255,0.06)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span style={{ fontFamily: 'monospace', fontSize: '0.6rem', color: 'rgba(255,255,255,0.27)', letterSpacing: '0.16em', textTransform: 'uppercase' as const }}>All Projects</span>
+          <span style={{ fontFamily: 'monospace', fontSize: '0.6rem', color: 'rgba(255,255,255,0.18)' }}>{total}</span>
+        </div>
+        <div ref={listRef} style={{ flex: 1, overflowY: 'auto', scrollbarWidth: 'thin' as const, scrollbarColor: 'rgba(255,255,255,0.07) transparent' }}>
+          {projects.map((proj, i) => {
+            const c = CFG[proj.type] ?? CFG['ai'];
+            const active = i === idx;
             return (
-              <div
-                key={project.id}
-                className={`group relative w-full transition-all duration-600 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
-                style={{ transitionDelay: `${index * 80}ms` }}
+              <div key={proj.id} data-i={i} onClick={() => goTo(i)}
+                style={{ padding: '0.9rem 1.2rem', borderBottom: '1px solid rgba(255,255,255,0.042)', borderLeft: `3px solid ${active ? c.accent : 'transparent'}`, background: active ? 'rgba(255,255,255,0.04)' : 'transparent', cursor: 'pointer', transition: 'all 0.18s', position: 'relative' as const }}
+                onMouseEnter={e => { if (!active) (e.currentTarget as HTMLDivElement).style.background='rgba(255,255,255,0.022)'; }}
+                onMouseLeave={e => { if (!active) (e.currentTarget as HTMLDivElement).style.background='transparent'; }}
               >
-                {/*
-                  CHANGE: was `hidden md:block` (shows at 768px) → `hidden xl:block` (shows at 1280px).
-                  At tablet widths the bleed thumbnail caused horizontal overflow;
-                  only reveal it on wide desktop where there's room.
-                */}
-                <img
-                  src={project.image} alt="" aria-hidden="true"
-                  className="hidden xl:block absolute top-1/2 -translate-y-1/2 h-[90%] w-[350px] object-cover rounded-lg opacity-60 z-0 pointer-events-none select-none drop-shadow-[0px_0px_10px_rgba(255,0,0,0.6)]"
-                  style={{ [isLeftCol ? 'left' : 'right']: '-250px' }}
-                />
-
-                <div className={`relative z-10 h-full flex flex-col bg-[#0F172A] rounded-xl border-t-4 ${config.borderColor} border-x border-b border-gray-800 overflow-hidden hover:-translate-y-1 hover:border-gray-700 transition-all duration-300`}>
-                  <div data-card-id={project.id} className="flex flex-col flex-1 p-6 gap-4">
-
-                    {/* Top row */}
-                    <div className="flex items-center justify-between">
-                      <Icon className={`${config.iconClass} shrink-0`} size={0} />
-                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-mono border uppercase tracking-wider ${config.badgeClass}`}>
-                        {project.category}
-                      </span>
-                    </div>
-
-                    {/* Title */}
-                    <h3 className="font-bold text-white leading-snug" style={{
-                      fontFamily: 'FuturaCyrillicBold, sans-serif',
-                      fontSize: 'clamp(1.2rem, 2.5vw, 1.875rem)',
-                    }}>
-                      {project.title}
-                    </h3>
-
-                    {/* Description */}
-                    <p className="text-gray-400 leading-relaxed line-clamp-2" style={{
-                      fontFamily: 'Outfit, sans-serif',
-                      fontSize: 'clamp(0.85rem, 1.5vw, 1rem)',
-                    }}>
-                      {project.description}
-                    </p>
-
-                    {/* Tags */}
-                    <div className="flex flex-wrap gap-2">
-                      {project.tags.map((tag) => (
-                        <span key={tag} className="px-3 py-1 bg-white/5 border border-gray-700 rounded-md text-sm font-mono text-gray-300">
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-
-                    {/* Impact */}
-                    <div className="border-t border-gray-800 pt-3 mt-auto">
-                      <p className="text-xm font-mono text-gray-400 uppercase tracking-wider mb-2">Impact</p>
-                      <ul className="space-y-1">
-                        {project.impact.map((item) => (
-                          <li key={item} className="flex items-start gap-2 text-sl text-gray-300">
-                            <span className="mt-2 w-1 h-1 rounded-full bg-gray-400 shrink-0" />
-                            {item}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    {/* CTA */}
-                    <div className="pt-2">
-                      {project.link ? (
-                        <a href={project.link} target="_blank" rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 text-sm font-semibold text-cyan-400 hover:text-cyan-300 transition-colors">
-                          Visit Site <ArrowUpRight size={14} />
-                        </a>
-                      ) : (
-                        <button className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-400 hover:text-white transition-colors cursor-default">
-                          View Project <ArrowUpRight size={14} />
-                        </button>
-                      )}
-                    </div>
+                {active && <div style={{ position: 'absolute', top: 0, left: 3, right: 0, height: '1.5px', background: `linear-gradient(90deg,${c.accent}55,transparent)` }} />}
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.5rem' }}>
+                  <div>
+                    <p style={{ fontFamily: 'FuturaCyrillicBold, Impact, sans-serif', fontSize: '1.43rem', fontWeight: 800, color: active ? '#ffffff' : 'rgba(109, 105, 105, 0.4)', margin: '0 0 0.22rem', lineHeight: 1.2, transition: 'color 0.18s' }}>{proj.title}</p>
+                    <span style={{ fontFamily: 'monospace', fontSize: '0.66rem', color: active ? c.accent : 'rgba(255,255,255,0.22)', letterSpacing: '0.06em', transition: 'color 0.18s' }}>{proj.category}</span>
                   </div>
+                  {active && <ArrowUpRight size={13} style={{ color: c.accent, flexShrink: 0, marginTop: 3 }} />}
                 </div>
               </div>
             );
           })}
         </div>
+      </div>
+    </div>
+  );
+};
+
+const MobileCard = ({ project, index, isVisible }: { project: Project; index: number; isVisible: boolean }) => {
+  const cfg = CFG[project.type] ?? CFG['ai'];
+  const [hov, setHov] = useState(false);
+  return (
+    <article onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
+      style={{ borderRadius: '0.85rem', overflow: 'hidden', background: hov?'rgba(255,255,255,0.07)':'rgba(255,255,255,0.03)', border: `1px solid ${hov?cfg.glow+'0.28)':'rgba(255,255,255,0.09)'}`, opacity: isVisible?1:0, transform: isVisible?(hov?'translateY(-5px)':'translateY(0)'):'translateY(26px)', transition: `opacity 0.6s ease ${index*60}ms, transform 0.32s ease, border-color 0.22s`, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ position: 'relative', height: '200px', overflow: 'hidden' }}>
+        <img src={project.image} alt={project.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transform: hov?'scale(1.05)':'scale(1)', transition: 'transform 0.5s' }} />
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 35%, rgba(6,8,15,0.82) 100%)' }} />
+        <span style={{ ...cfg.badge, position: 'absolute', top: '0.65rem', right: '0.65rem', padding: '2px 9px', borderRadius: '9999px', fontSize: '0.6rem', fontFamily: 'monospace', letterSpacing: '0.1em', textTransform: 'uppercase' as const, backdropFilter: 'blur(8px)' }}>{project.category}</span>
+      </div>
+      <div style={{ padding: '1rem 1.15rem 1.15rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1 }}>
+        <h3 style={{ fontFamily: 'FuturaCyrillicBold, Impact, sans-serif', fontSize: 'clamp(0.95rem, 2vw, 1.1rem)', fontWeight: 800, color: hov?cfg.accent:'#fff', lineHeight: 1.2, margin: 0, transition: 'color 0.2s' }}>{project.title}</h3>
+        <p style={{ color: 'rgba(156,163,175,0.82)', fontSize: '0.82rem', lineHeight: 1.6, fontFamily: 'Outfit, sans-serif', fontWeight: 300, margin: 0, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' } as React.CSSProperties}>{project.description}</p>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.32rem', marginTop: 'auto', paddingTop: '0.3rem' }}>
+          {project.tags.slice(0,3).map(tag => <span key={tag} style={{ padding: '2px 9px', borderRadius: '9999px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)', color: 'rgba(255,255,255,0.52)', fontSize: '0.67rem', fontFamily: 'monospace', letterSpacing: '0.04em' }}>{tag}</span>)}
+        </div>
+        {project.link && <a href={project.link} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', color: cfg.accent, fontSize: '0.73rem', fontFamily: 'monospace', textDecoration: 'none' }}>Live Demo <ExternalLink size={11}/></a>}
+      </div>
+    </article>
+  );
+};
+
+export const Projects = () => {
+  const { ref, isVisible } = useScrollAnimation(0.05);
+  const [isDesktop, setIsDesktop] = useState(false);
+  useEffect(() => { const c = () => setIsDesktop(window.innerWidth >= 1024); c(); window.addEventListener('resize', c); return () => window.removeEventListener('resize', c); }, []);
+  return (
+    <section id="projects" style={{ padding: 'clamp(3rem,5vw,5rem) clamp(1rem,3vw,2rem)', background: '#080B12' }}>
+      <div ref={ref} style={{ maxWidth: '1400px', margin: '0 auto' }}>
+        <div style={{ textAlign: 'center', marginBottom: 'clamp(2rem,4vw,3rem)', opacity: isVisible?1:0, transform: isVisible?'translateY(0)':'translateY(20px)', transition: 'opacity 0.7s, transform 0.7s' }}>
+          <h2 style={{ fontFamily: 'FuturaCyrillicBold, Impact, sans-serif', fontSize: 'clamp(2rem,5vw,3.5rem)', fontWeight: 900, color: '#fff', margin: '0 0 0.75rem', letterSpacing: '0.05em' }}>FEATURED WORK</h2>
+          <div style={{ width: '5rem', height: '3px', background: '#ef4444', borderRadius: '9999px', margin: '0 auto' }} />
+        </div>
+        {isDesktop ? (
+          <div style={{ opacity: isVisible?1:0, transform: isVisible?'translateY(0)':'translateY(24px)', transition: 'opacity 0.8s ease 0.15s, transform 0.8s ease 0.15s' }}>
+            <DesktopFeatured isVisible={isVisible} />
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 'clamp(0.85rem,2vw,1.25rem)' }}>
+            {projects.map((p,i) => <MobileCard key={p.id} project={p} index={i} isVisible={isVisible} />)}
+          </div>
+        )}
       </div>
     </section>
   );

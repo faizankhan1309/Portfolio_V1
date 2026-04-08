@@ -1,10 +1,7 @@
 /**
  * Hero.tsx — Fixed Layout + Marquee on scroll only
- * About section redesigned: editorial split-layout with cutout portrait,
- * large background typography, and asymmetric composition.
- *
- * Mobile/Tablet (≤1024px): renders two clean stacked sections, no GSAP/ScrollTrigger.
- * Desktop (>1024px): renders the full animated overlay version unchanged.
+ * Mobile/Tablet (≤1024px): clean static stacked sections, no GSAP/ScrollTrigger.
+ * Desktop (>1024px): full animated overlay version unchanged.
  */
 
 import { useLayoutEffect, useRef, useState, useEffect } from 'react';
@@ -26,12 +23,180 @@ const STATS = [
   { icon: Trophy,    value: '2',   label: 'Leadership Positions' },
 ];
 
+/* ══════════════════════════════════════════════════════════════════════
+   MOBILE ABOUT — Clean static layout, no GSAP
+══════════════════════════════════════════════════════════════════════ */
+const MobileAbout = () => {
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); observer.disconnect(); } },
+      { threshold: 0.08 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div
+      id="about"
+      ref={sectionRef}
+      style={{
+        backgroundColor: '#080B12',
+        padding: 'clamp(3rem, 8vw, 5rem) clamp(1.25rem, 5vw, 2rem)',
+        borderTop: '1px solid rgba(0,240,255,0.06)',
+      }}
+    >
+      {/* ── Profile photo with decorative glowing frame ── */}
+      <div style={{
+        display: 'flex', justifyContent: 'center',
+        marginBottom: 'clamp(2rem, 6vw, 3rem)',
+        opacity: visible ? 1 : 0,
+        transform: visible ? 'translateY(0)' : 'translateY(24px)',
+        transition: 'opacity 0.7s ease, transform 0.7s ease',
+      }}>
+        <div style={{
+          position: 'relative',
+          width: 'clamp(160px, 48vw, 240px)',
+          height: 'clamp(160px, 48vw, 240px)',
+        }}>
+          {/* Outer ambient glow */}
+          <div style={{
+            position: 'absolute', inset: '-20%',
+            borderRadius: '50%',
+            background: 'radial-gradient(ellipse, rgba(158, 19, 19, 0.22) 0%, rgb(4, 0, 255) 0%, transparent 0%)',
+            filter: 'blur(28px)',
+            pointerEvents: 'none',
+          }} />
+
+
+          {/* Circular clipped profile image */}
+          <div style={{
+            position: 'absolute', inset: 0,
+            borderRadius: '50%',
+            overflow: 'hidden',
+            border: '2px solid rgba(239,68,68,0.30)',
+            boxShadow: '0 0 32px rgba(239,68,68,0.25), 0 0 60px rgba(0,240,255,0.08)',
+          }}>
+            <img
+              src="/media/profilebg.png"
+              alt="Faizan Khan"
+              style={{
+                width: '100%', height: '100%',
+                objectFit: 'cover', objectPosition: 'center top',
+                display: 'block',
+              }}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* ── Text content ── */}
+      <div style={{
+        display: 'flex', flexDirection: 'column',
+        gap: 'clamp(1rem, 3vw, 1.5rem)',
+        marginBottom: 'clamp(1.5rem, 5vw, 2.5rem)',
+        opacity: visible ? 1 : 0,
+        transform: visible ? 'translateY(0)' : 'translateY(20px)',
+        transition: 'opacity 0.7s ease 0.2s, transform 0.7s ease 0.2s',
+      }}>
+        <h2 style={{
+          fontFamily: 'FuturaCyrillicBold, Impact, Arial Black, sans-serif',
+          fontSize: 'clamp(1.4rem, 5.5vw, 2rem)',
+          fontWeight: 700, color: '#ffffff',
+          lineHeight: 1.2, margin: 0,
+        }}>
+          <span style={{ color: '#f70000', display: 'block' }}>Where Logic ends,</span>
+          <span style={{ color: '#ffffff' }}>Creativity finds a way</span>
+        </h2>
+
+        <div style={{ position: 'relative', paddingLeft: '1.25rem' }}>
+          <div style={{
+            position: 'absolute', left: 0, top: '0.2rem', bottom: '0.2rem',
+            width: '2px',
+            background: 'linear-gradient(to bottom, #ef4444, rgba(239,68,68,0.15))',
+            borderRadius: '9999px',
+          }} />
+          <p style={{
+            color: 'rgba(209,213,219,0.72)',
+            fontSize: 'clamp(0.875rem, 3.2vw, 1rem)',
+            lineHeight: 1.8, margin: 0,
+            fontFamily: '"Outfit", system-ui, sans-serif',
+            fontWeight: 300,
+          }}>
+            A software engineer specializing in AI and machine learning,
+            focused on building intelligent, real-world systems.
+            Passionate about the intersection of art, design, and technology
+            to create meaningful digital experiences.
+          </p>
+        </div>
+      </div>
+
+      {/* ── Stats grid (glassmorphism 2-col) ── */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gap: 'clamp(0.6rem, 2vw, 0.85rem)',
+      }}>
+        {STATS.map(({ icon: Icon, value, label }, si) => (
+          <div
+            key={label}
+            style={{
+              padding: 'clamp(0.75rem, 2.5vw, 1rem)',
+              borderRadius: '0.75rem',
+              background: 'rgba(255,255,255,0.04)',
+              backdropFilter: 'blur(12px)',
+              border: '1px solid rgba(239,68,68,0.18)',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.35)',
+              display: 'flex', flexDirection: 'column', gap: '0.2rem',
+              opacity: visible ? 1 : 0,
+              transform: visible ? 'translateY(0)' : 'translateY(16px)',
+              transition: `opacity 0.6s ease ${350 + si * 80}ms, transform 0.6s ease ${350 + si * 80}ms`,
+            }}
+          >
+            <span style={{
+              fontFamily: 'FuturaCyrillicBold, Impact, Arial Black, sans-serif',
+              fontSize: 'clamp(1.6rem, 6.5vw, 2.4rem)',
+              fontWeight: 900, color: '#ffffff', lineHeight: 1,
+            }}>{value}</span>
+            <span style={{
+              display: 'flex', alignItems: 'center', gap: '0.3rem',
+              fontSize: 'clamp(0.62rem, 2.2vw, 0.78rem)',
+              color: 'rgba(156,163,175,0.70)',
+              textTransform: 'uppercase', letterSpacing: '0.08em',
+              fontFamily: 'FuturaCyrillicBold',
+            }}>
+              <Icon size={11} style={{ color: '#ef4444', flexShrink: 0 }} />
+              {label}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      <style>{`
+        @keyframes mobileFrameSpin {
+          from { transform: rotate(0deg); }
+          to   { transform: rotate(360deg); }
+        }
+        @keyframes mobileFrameCounterSpin {
+          from { transform: rotate(0deg); }
+          to   { transform: rotate(-360deg); }
+        }
+      `}</style>
+    </div>
+  );
+};
+
 export const Hero = () => {
 
-  /* ── mobile/tablet detection ────────────────────────────────────────── */
+  /* ── mobile/tablet detection ─────────────────────────── */
   const isMobile = useIsMobile();
 
-  /* ── typewriter ─────────────────────────────────────────────────────── */
+  /* ── typewriter ──────────────────────────────────────── */
   const [titleIdx, setTitleIdx] = useState(0);
   const [display,  setDisplay]  = useState('');
   const [deleting, setDeleting] = useState(false);
@@ -51,7 +216,7 @@ export const Hero = () => {
     return () => clearTimeout(id);
   }, [display, deleting, titleIdx]);
 
-  /* ── refs ───────────────────────────────────────────────────────────── */
+  /* ── refs ────────────────────────────────────────────── */
   const sectionRef  = useRef<HTMLDivElement>(null);
   const depthRef    = useRef<HTMLDivElement>(null);
   const contentRef  = useRef<HTMLDivElement>(null);
@@ -67,13 +232,15 @@ export const Hero = () => {
   const mq2WrapRef  = useRef<HTMLDivElement>(null);
   const aboutRef    = useRef<HTMLDivElement>(null);
 
-  /* ── About section animation refs ────────────────────────────────────── */
+  /* ── About section animation refs ────────────────────── */
   const aboutStatsRef = useRef<HTMLDivElement>(null);
   const aboutImgRef   = useRef<HTMLDivElement>(null);
   const aboutTextRef  = useRef<HTMLDivElement>(null);
 
-  /* ── GSAP ───────────────────────────────────────────────────────────── */
+  /* ── GSAP (desktop only) ─────────────────────────────── */
   useLayoutEffect(() => {
+    if (isMobile) return;
+
     const section = sectionRef.current;
     const depth   = depthRef.current;
     const content = contentRef.current;
@@ -82,7 +249,6 @@ export const Hero = () => {
     const cta     = ctaRef.current;
     const chev    = chevRef.current;
     const sigCont = sigContRef.current;
-    const sigPath = sigPathRef.current;
     const mq1     = mq1Ref.current;
     const mq2     = mq2Ref.current;
     const mq1Wrap = mq1WrapRef.current;
@@ -90,17 +256,20 @@ export const Hero = () => {
     const about   = aboutRef.current;
 
     if (!section||!depth||!content||!name||!sub||!cta||!chev||
-        !sigCont||!sigPath||!mq1||!mq2||!mq1Wrap||!mq2Wrap||!about) return;
+        !sigCont||!mq1||!mq2||!mq1Wrap||!mq2Wrap||!about) return;
 
-    /* initial states */
+    const sigPathEl = sigPathRef.current;
+
     gsap.set(about, { y: '100vh' });
     gsap.set(sigCont, { opacity: 0 });
     gsap.set([mq1Wrap, mq2Wrap], { opacity: 0 });
 
-    const pathLen = sigPath.getTotalLength();
-    gsap.set(sigPath, { strokeDasharray: pathLen, strokeDashoffset: pathLen });
+    let pathLen = 0;
+    if (sigPathEl) {
+      try { pathLen = sigPathEl.getTotalLength(); } catch (_) { pathLen = 5000; }
+      gsap.set(sigPathEl, { strokeDasharray: pathLen, strokeDashoffset: pathLen });
+    }
 
-    /* ── marquee infinite loops ───────────────────────────────────────── */
     const startMarquee = () => {
       if (!mq1 || !mq2) return;
       const setupLoop = (el: HTMLDivElement, direction: 1 | -1, speed = 0.5) => {
@@ -119,7 +288,6 @@ export const Hero = () => {
     };
     startMarquee();
 
-    /* ── pinned scroll timeline ──────────────────────────────────────── */
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({
         scrollTrigger: {
@@ -131,51 +299,34 @@ export const Hero = () => {
         },
       });
 
-      tl.to([sub, cta, chev], {
-        opacity: 0, y: -22,
-        duration: 0.20, ease: 'power2.in', stagger: 0.03,
-      }, 0);
-
-      tl.to([mq1Wrap, mq2Wrap], {
-        opacity: 1, duration: 0.6, ease: 'power1.inOut',
-      }, 0.06);
-
-      tl.to(depth, {
-        scale: 0.6, opacity: 1.0,
-        duration: 0.45, ease: 'power2.inOut',
-      }, 0);
-
+      tl.to([sub, cta, chev], { opacity: 0, y: -22, duration: 0.20, ease: 'power2.in', stagger: 0.03 }, 0);
+      tl.to([mq1Wrap, mq2Wrap], { opacity: 1, duration: 0.6, ease: 'power1.inOut' }, 0.06);
+      tl.to(depth, { scale: 0.6, opacity: 1.0, duration: 0.45, ease: 'power2.inOut' }, 0);
       tl.to(mq1Wrap, { y: -60, duration: 0.1, ease: 'power1.inOut' }, 0);
       tl.to(mq2Wrap, { y: -40, duration: 0.1, ease: 'power1.inOut' }, 0);
-
-      tl.to(name, {
-        opacity: 0.18, duration: 0.25, ease: 'power1.inOut',
-      }, 0.15);
-
+      tl.to(name, { opacity: 0.18, duration: 0.25, ease: 'power1.inOut' }, 0.15);
       tl.to(sigCont, { opacity: 1, duration: 0.02 }, 0.20);
 
-      tl.to(sigPath, {
-        strokeDashoffset: 0,
-        duration: 1.9, ease: 'power1.inOut',
-      }, 0.20);
+      if (sigPathEl && pathLen > 0) {
+        tl.to(sigPathEl, { strokeDashoffset: 0, duration: 1.9, ease: 'power1.inOut' }, 0.20);
+      }
 
-      tl.to(about, {
-        y: '0vh', duration: 1.30, ease: 'power3.inOut',
-      }, 0.70);
+      tl.to(about, { y: '0vh', duration: 1.30, ease: 'power3.inOut' }, 0.70);
 
     }, section);
 
     return () => ctx.revert();
   }, []);
 
-  /* ── About panel — entrance animations when it slides into view ──────── */
+  /* ── About panel entrance animations (desktop only) ──── */
   useEffect(() => {
+    if (isMobile) return;
+
     const stats = aboutStatsRef.current;
     const img   = aboutImgRef.current;
     const text  = aboutTextRef.current;
     if (!stats || !img || !text) return;
 
-    /* set initial hidden states */
     gsap.set(stats.children, { opacity: 0, x: -40 });
     gsap.set(img,            { opacity: 0, scale: 0.92 });
     gsap.set(text.children,  { opacity: 0, y: 28 });
@@ -183,20 +334,9 @@ export const Hero = () => {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          gsap.to(stats.children, {
-            opacity: 1, x: 0,
-            duration: 0.8, ease: 'power3.out',
-            stagger: 0.12, delay: 0.1,
-          });
-          gsap.to(img, {
-            opacity: 1, scale: 1,
-            duration: 1.1, ease: 'power3.out', delay: 0.2,
-          });
-          gsap.to(text.children, {
-            opacity: 1, y: 0,
-            duration: 0.9, ease: 'power3.out',
-            stagger: 0.14, delay: 0.35,
-          });
+          gsap.to(stats.children, { opacity: 1, x: 0, duration: 0.8, ease: 'power3.out', stagger: 0.12, delay: 0.1 });
+          gsap.to(img, { opacity: 1, scale: 1, duration: 1.1, ease: 'power3.out', delay: 0.2 });
+          gsap.to(text.children, { opacity: 1, y: 0, duration: 0.9, ease: 'power3.out', stagger: 0.14, delay: 0.35 });
           observer.disconnect();
         }
       },
@@ -207,12 +347,12 @@ export const Hero = () => {
   }, []);
 
   /* ══════════════════════════════════════════════════════════════════════
-     MOBILE / TABLET RENDER — two clean stacked sections, no GSAP pin
+     MOBILE / TABLET RENDER
   ══════════════════════════════════════════════════════════════════════ */
   if (isMobile) {
     return (
       <>
-        {/* ── MOBILE HERO ───────────────────────────────────────────── */}
+        {/* ── MOBILE HERO ─────────────────────────────────────────── */}
         <div
           id="Hero"
           style={{
@@ -240,68 +380,83 @@ export const Hero = () => {
           <div style={{
             position: 'relative', zIndex: 2,
             display: 'flex', flexDirection: 'column', alignItems: 'center',
-            textAlign: 'center', padding: '2rem 1.25rem', gap: '0.5rem',
+            textAlign: 'center',
+            padding: 'clamp(1.5rem, 5vw, 2.5rem) clamp(1rem, 5vw, 1.5rem)',
+            gap: '0',
+            width: '100%',
+            maxWidth: '600px',
           }}>
             <h1 style={{
               fontFamily: 'FuturaCyrillicBold, Impact, Arial Black, sans-serif',
-              fontSize: 'clamp(2.8rem, 11vw, 5rem)',
+              fontSize: 'clamp(2rem, 10vw, 4.5rem)',
               fontWeight: 900, color: '#ffffff',
-              letterSpacing: '0.1em', lineHeight: 1, margin: 0,
+              letterSpacing: '0.06em', lineHeight: 1, margin: 0,
               textShadow: '0 0 60px rgba(0,240,255,0.18)',
-              whiteSpace: 'nowrap',
+              wordBreak: 'break-word',
             }}>
               FAIZAN KHAN
             </h1>
 
             <div style={{
-              marginTop: '0.6rem', marginBottom: '1rem',
-              width: 'clamp(100px,40vw,220px)', height: '1px',
+              margin: '0.8rem 0 1rem',
+              width: 'clamp(100px, 40vw, 220px)', height: '1px',
               background: 'linear-gradient(90deg, transparent, rgba(0,240,255,0.5), transparent)',
             }} />
 
             {/* Typewriter */}
-            <div style={{ height: '1.8rem', marginBottom: '1.2rem' }}>
+            <div style={{ height: 'clamp(1.4rem, 5vw, 1.8rem)', marginBottom: 'clamp(1rem, 4vw, 1.5rem)', width: '100%' }}>
               <p style={{
-                fontFamily: 'monospace', fontSize: 'clamp(0.85rem, 3.5vw, 1.1rem)',
+                fontFamily: 'monospace',
+                fontSize: 'clamp(0.8rem, 3.2vw, 1.1rem)',
                 color: '#00F0FF', margin: 0,
+                whiteSpace: 'nowrap', overflow: 'hidden',
               }}>
                 {display}<span style={{ animation: 'mhb 1s step-end infinite' }}>|</span>
               </p>
             </div>
 
             {/* CTAs */}
-            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+            <div style={{
+              display: 'flex', gap: 'clamp(0.5rem, 2vw, 0.75rem)',
+              flexWrap: 'wrap', justifyContent: 'center',
+              width: '100%',
+            }}>
               <button
                 onClick={() => document.getElementById('projects')?.scrollIntoView({ behavior: 'smooth' })}
                 style={{
-                  padding: '0.75rem 1.4rem',
+                  padding: 'clamp(0.65rem, 2vw, 0.75rem) clamp(1.1rem, 3.5vw, 1.4rem)',
                   background: 'linear-gradient(135deg,#ef4444,#991b1b)',
                   border: 'none', borderRadius: '0.45rem',
-                  color: '#fff', fontWeight: 600, fontSize: '0.875rem',
+                  color: '#fff', fontWeight: 600,
+                  fontSize: 'clamp(0.78rem, 2.8vw, 0.875rem)',
                   letterSpacing: '0.04em', cursor: 'pointer',
                   display: 'flex', alignItems: 'center', gap: '0.4rem',
+                  whiteSpace: 'nowrap',
                 }}
               >
-                <Eye size={15} /> View My Work
+                <Eye size={14} /> View My Work
               </button>
               <button
                 onClick={() => window.open('/media/resume.pdf')}
                 style={{
-                  padding: '0.75rem 1.4rem', background: 'transparent',
+                  padding: 'clamp(0.65rem, 2vw, 0.75rem) clamp(1.1rem, 3.5vw, 1.4rem)',
+                  background: 'transparent',
                   border: '1.5px solid #f87171', borderRadius: '0.45rem',
-                  color: '#f87171', fontWeight: 600, fontSize: '0.875rem',
+                  color: '#f87171', fontWeight: 600,
+                  fontSize: 'clamp(0.78rem, 2.8vw, 0.875rem)',
                   letterSpacing: '0.04em', cursor: 'pointer',
                   display: 'flex', alignItems: 'center', gap: '0.4rem',
+                  whiteSpace: 'nowrap',
                 }}
               >
-                <Download size={15} /> Resume
+                <Download size={14} /> Resume
               </button>
             </div>
           </div>
 
           {/* Scroll hint */}
           <div style={{
-            position: 'absolute', bottom: '1.5rem', left: '50%',
+            position: 'absolute', bottom: 'clamp(1rem, 3vw, 1.5rem)', left: '50%',
             transform: 'translateX(-50%)', zIndex: 3,
             animation: 'mhbounce 1.6s ease-in-out infinite',
           }}>
@@ -309,113 +464,8 @@ export const Hero = () => {
           </div>
         </div>
 
-        {/* ── MOBILE ABOUT ──────────────────────────────────────────── */}
-        <div
-          id="about"
-          style={{
-            backgroundColor: '#080B12',
-            padding: 'clamp(3rem, 8vw, 5rem) clamp(1.25rem, 5vw, 2rem)',
-            borderTop: '1px solid rgba(0,240,255,0.08)',
-          }}
-        >
-          {/* Portrait */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            marginBottom: '2.5rem',
-          }}>
-            <div style={{
-              position: 'relative',
-              width: 'clamp(200px, 60vw, 320px)',
-              borderRadius: '1rem',
-              overflow: 'visible',
-            }}>
-              {/* Ambient glow */}
-              <div style={{
-                position: 'absolute', bottom: 0, left: '50%',
-                transform: 'translateX(-50%)',
-                width: '80%', height: '60%',
-                background: 'radial-gradient(ellipse at 50% 100%, rgba(239,68,68,0.3) 0%, transparent 70%)',
-                filter: 'blur(30px)', zIndex: 0, pointerEvents: 'none',
-              }} />
-              <img
-                src="/media/profilebg.png"
-                alt="Faizan Khan"
-                style={{
-                  width: '100%', height: 'auto',
-                  display: 'block', position: 'relative', zIndex: 1,
-                  filter: 'drop-shadow(0 10px 30px rgba(239,68,68,0.25))',
-                }}
-              />
-            </div>
-          </div>
-
-          {/* Stats grid */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '1.25rem',
-            marginBottom: '2.5rem',
-          }}>
-            {STATS.map(({ icon: Icon, value, label }) => (
-              <div key={label} style={{
-                borderLeft: '2px solid rgba(239,68,68,0.4)',
-                paddingLeft: '1rem',
-                display: 'flex', flexDirection: 'column', gap: '0.15rem',
-              }}>
-                <span style={{
-                  fontFamily: 'FuturaCyrillicBold, Impact, Arial Black, sans-serif',
-                  fontSize: 'clamp(2rem, 8vw, 3rem)',
-                  fontWeight: 900, color: '#ffffff', lineHeight: 1,
-                }}>{value}</span>
-                <span style={{
-                  display: 'flex', alignItems: 'center', gap: '0.35rem',
-                  fontSize: 'clamp(0.7rem, 3vw, 0.9rem)',
-                  color: 'rgba(156,163,175,0.75)',
-                  textTransform: 'uppercase', letterSpacing: '0.1em',
-                  fontFamily: 'FuturaCyrillicBold',
-                }}>
-                  <Icon size={14} style={{ color: '#ef4444', flexShrink: 0 }} />
-                  {label}
-                </span>
-              </div>
-            ))}
-          </div>
-
-          {/* Text content */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            <h2 style={{
-              fontFamily: 'FuturaCyrillicBold, Impact, Arial Black, sans-serif',
-              fontSize: 'clamp(1.5rem, 6vw, 2.4rem)',
-              fontWeight: 700, color: '#ffffff',
-              lineHeight: 1.2, margin: 0,
-            }}>
-              <span style={{ color: '#f70000', display: 'block' }}>Where Logic ends,</span>
-              <span style={{ color: '#ffffff' }}>Creativity finds a way</span>
-            </h2>
-
-            <div style={{ position: 'relative', paddingLeft: '1.25rem' }}>
-              <div style={{
-                position: 'absolute', left: 0, top: '0.2rem', bottom: '0.2rem',
-                width: '2px',
-                background: 'linear-gradient(to bottom, #ef4444, rgba(239,68,68,0.2))',
-                borderRadius: '9999px',
-              }} />
-              <p style={{
-                color: 'rgba(209,213,219,0.75)',
-                fontSize: 'clamp(0.9rem, 3.5vw, 1.05rem)',
-                lineHeight: 1.8, margin: 0,
-                fontFamily: '"Outfit", system-ui, sans-serif',
-                fontWeight: 300,
-              }}>
-                A software engineer specializing in AI and machine learning,
-                focused on building intelligent, real-world systems.
-                Passionate about the intersection of art, design, and technology
-                to create meaningful digital experiences.
-              </p>
-            </div>
-          </div>
-        </div>
+        {/* ── MOBILE ABOUT ──────────────────────────────────────── */}
+        <MobileAbout />
 
         <style>{`
           @keyframes mhb      { 0%,100%{opacity:1} 50%{opacity:0} }
@@ -428,7 +478,7 @@ export const Hero = () => {
     );
   }
 
-  /* ── marquee units ──────────────────────────────────────────────────── */
+  /* ── marquee units ───────────────────────────────────── */
   const createMqUnits = (prefix: string) => Array.from({ length: REPEATS }, (_, i) => (
     <span key={`${prefix}-${i}`} className="mq-unit" style={{
       fontFamily:       'FuturaCyrillicBold, Impact, Arial Black, sans-serif',
@@ -442,16 +492,18 @@ export const Hero = () => {
       userSelect:       'none',
       pointerEvents:    'none',
       opacity:          0.22,
-      filter:           'drop-shadow(0 0 12px rgba(0, 0, 0, 0))',
     }}>
       {MQ_TEXT}
     </span>
   ));
 
+  /* ════════════════════════════════════════════════════════════
+     DESKTOP RENDER (unchanged)
+  ════════════════════════════════════════════════════════════ */
   return (
     <div id="Hero" ref={sectionRef} style={{ position: 'relative', overflow: 'hidden' }}>
 
-      {/* ── MARQUEE ROWS ─────────────────────────────────────────────────── */}
+      {/* ── MARQUEE ROWS ────────────────────────────────────────── */}
       <div ref={mq1WrapRef} style={{
         position: 'absolute', top: '50%', left: 0, width: '100vw',
         height: 'auto', overflow: 'hidden', zIndex: -1,
@@ -476,7 +528,7 @@ export const Hero = () => {
         </div>
       </div>
 
-      {/* ── DEPTH CONTAINER ─────────────────────────────────────────────── */}
+      {/* ── DEPTH CONTAINER ─────────────────────────────────────── */}
       <div
         ref={depthRef}
         style={{
@@ -501,7 +553,7 @@ export const Hero = () => {
           zIndex: 1, pointerEvents: 'none', filter: 'blur(100px)',
         }} />
 
-        {/* ── MAIN CONTENT ────────────────────────────────────────────────── */}
+        {/* ── MAIN CONTENT ────────────────────────────────────────── */}
         <div ref={contentRef} style={{
           position: 'absolute', inset: 0, zIndex: 3,
           display: 'flex', flexDirection: 'column',
@@ -588,7 +640,7 @@ export const Hero = () => {
           </div>
         </div>
 
-        {/* ── SIGNATURE ─────────────────────────────────────────────────── */}
+        {/* ── SIGNATURE ───────────────────────────────────────────── */}
         <div ref={sigContRef} style={{
           position: 'absolute', inset: 0,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -611,7 +663,7 @@ export const Hero = () => {
           </svg>
         </div>
 
-        {/* ── CHEVRON ─────────────────────────────────────────────────── */}
+        {/* ── CHEVRON ─────────────────────────────────────────────── */}
         <div ref={chevRef} style={{
           position: 'absolute', bottom: '1.8rem', left: '50%',
           transform: 'translateX(-50%)', zIndex: 6,
@@ -623,7 +675,7 @@ export const Hero = () => {
       </div>{/* /depthRef */}
 
       {/* ════════════════════════════════════════════════════════════════════
-          ABOUT PANEL — Editorial Split Layout
+          ABOUT PANEL — Editorial Split Layout (desktop, unchanged)
       ════════════════════════════════════════════════════════════════════ */}
       <div ref={aboutRef} style={{
         position:        'absolute',
@@ -633,71 +685,52 @@ export const Hero = () => {
         height:          '100vh',
         zIndex:          10,
         backgroundColor: '#080B12',
-        overflow: 'visible',
+        overflow:        'visible',
         borderTop:       '1px solid rgba(0,240,255,0.08)',
         boxShadow:       '0 -40px 100px rgba(0,0,0,0.95)',
       }}>
-         <div
-    style={{
-      position: 'absolute',
-      bottom: 0,
-      left: 0,
-      width: '100%',
-      height: '220px',
-
-      zIndex: 3,
-      pointerEvents: 'none',
-
-      background: `
-        linear-gradient(
-          to bottom,
-          rgba(8,11,18,0) 0%,
-          rgba(8,11,18,0.5) 40%,
-          rgba(8,11,18,0.9) 75%,
-          #080B12 100%
-        )
-      `,
-    }}
-  />
-        
-
-        {/* Subtle noise texture overlay */}
-        
-
-        {/* ── 3-COLUMN EDITORIAL GRID ─────────────────────────────────── */}
         <div style={{
-          position:      'relative',
-          zIndex:        1,
-          height:        '100%',
-          display:       'grid',
+          position: 'absolute',
+          bottom: 0, left: 0,
+          width: '100%', height: '220px',
+          zIndex: 3, pointerEvents: 'none',
+          background: `linear-gradient(to bottom, rgba(8,11,18,0) 0%, rgba(8,11,18,0.5) 40%, rgba(8,11,18,0.9) 75%, #080B12 100%)`,
+        }} />
+
+        {/* ── 3-COLUMN EDITORIAL GRID ─────────────────────────────── */}
+        <div style={{
+          position:            'relative',
+          zIndex:              1,
+          height:              '100%',
+          display:             'grid',
           gridTemplateColumns: '1fr 1.1fr 1fr',
           gridTemplateRows:    '1fr',
-          maxWidth:      1400,
-          margin:        '0 auto',
-          padding:       '0 2.5rem',
-          gap:           '0',
-          alignItems:    'center',
+          maxWidth:            1400,
+          margin:              '0 auto',
+          padding:             '0 2.5rem',
+          gap:                 '0',
+          alignItems:          'center',
         }}
         className="about-grid"
         >
 
-          {/* ── LEFT: STATS ──────────────────────────────────────────── */}
+          {/* ── LEFT: STATS ──────────────────────────────────────── */}
           <div ref={aboutStatsRef} style={{
             display:       'flex',
             flexDirection: 'column',
             gap:           '2.8rem',
             paddingRight:  '4rem',
             paddingLeft:   '0.1rem',
-            transform: 'translate(-90px, 60px)',
+            transform:     'translate(-90px, 60px)',
           }}>
             {STATS.map(({ icon: Icon, value, label }, i) => (
               <div key={label} style={{
-                display:    'flex',
+                display:       'flex',
                 flexDirection: 'column',
-                gap:        '0.2rem',
-                borderLeft: i === 0 ? '2px solid rgba(239,68,68,0.6)' : '2px solid rgba(239,68,68,0.15)',
-                paddingLeft: '1.4rem',
-                transition: 'border-color 0.4s',
+                gap:           '0.2rem',
+                borderLeft:    i === 0 ? '2px solid rgba(239,68,68,0.6)' : '2px solid rgba(239,68,68,0.15)',
+                paddingLeft:   '1.4rem',
+                transition:    'border-color 0.4s',
               }}
               onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(239,68,68,0.8)'; }}
               onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = i === 0 ? 'rgba(239,68,68,0.6)' : 'rgba(239,68,68,0.15)'; }}
@@ -723,96 +756,76 @@ export const Hero = () => {
                   textTransform: 'uppercase',
                   marginTop:     '0.2rem',
                 }}>
-                 
                   {label}
                 </span>
               </div>
             ))}
           </div>
 
-          {/* ── CENTER: PORTRAIT + BACKGROUND TEXT ─────────────────────── */}
-          
+          {/* ── CENTER: PORTRAIT ────────────────────────────────────── */}
           <div ref={aboutImgRef} style={{
-            position:  'relative',
-            minHeight: '88vh',
-            height: 'auto',
-            display:   'flex',
-            overflow: 'visible',
-            alignItems: 'flex-end',
+            position:       'relative',
+            minHeight:      '88vh',
+            height:         'auto',
+            display:        'flex',
+            overflow:       'visible',
+            alignItems:     'flex-end',
             justifyContent: 'center',
-            alignSelf: 'end',
-            
-            
-          }}
-          >
-            
-
+            alignSelf:      'end',
+          }}>
             {/* Ambient glow behind figure */}
             <div style={{
-              position: 'absolute',
-              bottom:   '-5%',
-              left:     '50%',
+              position:  'absolute',
+              bottom:    '-5%',
+              left:      '50%',
               transform: 'translateX(-50%)',
-              width:    '80%',
-              height:   '60%',
+              width:     '80%',
+              height:    '60%',
               background: 'radial-gradient(ellipse at 50% 100%, rgba(239,68,68,0.22) 0%, rgba(25,0,255,0.12) 50%, transparent 75%)',
-              filter:   'blur(40px)',
-              zIndex:   1,
+              filter:    'blur(40px)',
+              zIndex:    1,
               pointerEvents: 'none',
-
-            
             }} />
-            
 
-            <div
-  style={{
-    position: 'absolute',
-    bottom: 0,
-    left: '50%',
-    transform: 'translateX(-50%)',
-    width: '100%',
-    maxWidth: '520px',
-    height: 'auto',
-    zIndex: 3,
-    display: 'flex',
-    justifyContent: 'center',
-    pointerEvents: 'auto',
-  }}
-
-           
-            >
+            <div style={{
+              position:  'absolute',
+              bottom:    0,
+              left:      '50%',
+              transform: 'translateX(-50%)',
+              width:     '100%',
+              maxWidth:  '520px',
+              height:    'auto',
+              zIndex:    3,
+              display:   'flex',
+              justifyContent: 'center',
+              pointerEvents: 'auto',
+            }}>
               <img
-  src="/media/profilebg.png"
-  alt="Faizan Khan"
-  style={{
-    width: '130%',
-    height: 'auto',
-
-    transform: 'scale(1.42)',   // 🔥 CONTROL SIZE HERE
-    transformOrigin: 'bottom center',
-
-    objectFit: 'contain',
-    objectPosition: 'bottom',
-    display: 'block',
-
-    filter: 'drop-shadow(0 20px 40px rgba(239,68,68,0.2))',
-
-    transition: 'none',
-  }}
-/>
+                src="/media/profilebg.png"
+                alt="Faizan Khan"
+                style={{
+                  width:           '130%',
+                  height:          'auto',
+                  transform:       'scale(1.42)',
+                  transformOrigin: 'bottom center',
+                  objectFit:       'contain',
+                  objectPosition:  'bottom',
+                  display:         'block',
+                  filter:          'drop-shadow(0 20px 40px rgba(239,68,68,0.2))',
+                }}
+              />
             </div>
           </div>
-          {/* ── RIGHT: TEXT CONTENT ──────────────────────────────────────── */}
+
+          {/* ── RIGHT: TEXT CONTENT ──────────────────────────────────── */}
           <div ref={aboutTextRef} style={{
             display:       'flex',
             flexDirection: 'column',
             gap:           '2rem',
             paddingLeft:   '3rem',
             paddingRight:  '0.5rem',
-            position: 'relative', 
-          
+            position:      'relative',
           }}>
-            {/* Main heading */}
             <div>
               <h2 style={{
                 fontFamily:    'FuturaCyrillicBold, Impact, Arial Black, sans-serif',
@@ -822,36 +835,25 @@ export const Hero = () => {
                 lineHeight:    1.15,
                 margin:        0,
                 letterSpacing: '0.01em',
-                display: 'inline-block',
-                width: 'fit-content',
-                transform: 'translate(30px, -20px) scale(1.56)',
+                display:       'inline-block',
+                width:         'fit-content',
+                transform:     'translate(30px, -20px) scale(1.56)',
               }}>
-                <span style={{
-
-                 color: '#f70000',
-                 display: 'block',
-                 whiteSpace: 'nowrap', 
-                 }}>
+                <span style={{ color: '#f70000', display: 'block', whiteSpace: 'nowrap' }}>
                   Where Logic ends,
                 </span>
-                
-                <span style={{ color: '#ffffff' ,
-                  whiteSpace: 'nowrap',
-                }}>
+                <span style={{ color: '#ffffff', whiteSpace: 'nowrap' }}>
                   Creativity finds a way
-                  </span>
+                </span>
               </h2>
             </div>
 
-            {/* Accent line + paragraph */}
             <div style={{
-            position:   'relative',
-            left: '150px',  
-            top:  '150px',
-            scale: '1.24',
-
-             }}>
-              {/* Vertical accent line */}
+              position: 'relative',
+              left:     '150px',
+              top:      '150px',
+              scale:    '1.24',
+            }}>
               <div style={{
                 position:     'absolute',
                 left:         '-1.5rem',
@@ -862,12 +864,12 @@ export const Hero = () => {
                 borderRadius: '9999px',
               }} />
               <p style={{
-                color:        'rgba(209,213,219,0.72)',
-                fontSize:     'clamp(0.875rem, 1.05vw, 1.02rem)',
-                lineHeight:   1.85,
-                margin:       0,
-                fontFamily:   '"Outfit", system-ui, sans-serif',
-                fontWeight:   300,
+                color:      'rgba(209,213,219,0.72)',
+                fontSize:   'clamp(0.875rem, 1.05vw, 1.02rem)',
+                lineHeight: 1.85,
+                margin:     0,
+                fontFamily: '"Outfit", system-ui, sans-serif',
+                fontWeight: 300,
               }}>
                 A software engineer specializing in AI and machine learning,
                 focused on building intelligent, real-world systems.
@@ -875,13 +877,6 @@ export const Hero = () => {
                 to create meaningful digital experiences.
               </p>
             </div>
-
-            {/* Divider */}
-          
-
-            {/* Availability badge */}
-          
-
           </div>
         </div>
       </div>
@@ -892,12 +887,6 @@ export const Hero = () => {
           0%,100%{ transform:translateX(-50%) translateY(0);  }
           50%    { transform:translateX(-50%) translateY(7px); }
         }
-        @keyframes pulse-green {
-          0%,100% { box-shadow: 0 0 6px rgba(34,197,94,0.7); }
-          50%     { box-shadow: 0 0 14px rgba(34,197,94,1);   }
-        }
-
-        /* ── Responsive: tablet ───────────────────────── */
         @media (max-width: 900px) {
           .about-grid {
             grid-template-columns: 1fr !important;
@@ -911,7 +900,6 @@ export const Hero = () => {
           .about-grid > *:nth-child(2) { order: 1; height: 60vw !important; max-height: 360px !important; }
           .about-grid > *:nth-child(3) { order: 2; padding-left: 0 !important; padding-right: 0 !important; }
         }
-
         @media (max-width: 600px) {
           .about-grid > *:nth-child(1) { justify-content: space-around !important; }
           .about-grid > *:nth-child(2) { height: 75vw !important; }
