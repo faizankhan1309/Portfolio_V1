@@ -1,8 +1,8 @@
 import { useState } from 'react';
+import { ErrorBoundary } from './ErrorBoundary';
 import { LoadingScreen } from './components/loadingscreen';
 import { Navigation } from './components/Navigation';
 import { Hero } from './components/Hero';
-import { Videeo } from './components/Videeo';
 import { Skills } from './components/Skills';
 import { Projects } from './components/Projects';
 import { Research } from './components/Research';
@@ -15,21 +15,22 @@ function App() {
   const [loading, setLoading] = useState(true);
 
   return (
-    <div className="min-h-screen bg-[#080B12] text-white">
-      {loading && <LoadingScreen onComplete={() => setLoading(false)} />}
+    <ErrorBoundary>
+      <div className="min-h-screen bg-[#000000] text-white">
+        {loading && <LoadingScreen onComplete={() => setLoading(false)} />}
 
-      <Navigation />
-      <Hero />
-      <Skills />
-      <Projects />
-      <Research />
-      <WorkExperience />
-      <Videeo />
-      <Gallery />
-      <Contact />
+        <Navigation />
+        <Hero />
+        <Skills />
+        <Projects />
+        <Research />
+        <WorkExperience />
+        <Gallery />
+        <Contact />
 
-      <Footer />
-    </div>
+        <Footer />
+      </div>
+    </ErrorBoundary>
   );
 }
 

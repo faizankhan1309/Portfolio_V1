@@ -46,7 +46,7 @@ const MobileAbout = () => {
       id="about"
       ref={sectionRef}
       style={{
-        backgroundColor: '#080B12',
+        backgroundColor: '#000000',
         padding: 'clamp(3rem, 8vw, 5rem) clamp(1.25rem, 5vw, 2rem)',
         borderTop: '1px solid rgba(0,240,255,0.06)',
       }}
@@ -369,11 +369,11 @@ export const Hero = () => {
           }}
         >
           {/* Dark overlay */}
-          <div style={{ position: 'absolute', inset: 0, background: 'rgba(8,11,18,0.55)', zIndex: 0 }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 0 }} />
           {/* Bottom fade */}
           <div style={{
             position: 'absolute', bottom: 0, left: 0, right: 0, height: '180px',
-            background: 'linear-gradient(to top, #080B12, transparent)', zIndex: 1, pointerEvents: 'none',
+            background: 'linear-gradient(to top, #000000, transparent)', zIndex: 1, pointerEvents: 'none',
           }} />
 
           {/* Content */}
@@ -546,10 +546,10 @@ export const Hero = () => {
           backgroundRepeat:   'no-repeat',
         }}
       >
-        <div style={{ position: 'absolute', inset: 0, background: 'rgba(8,11,18,0.35)', zIndex: 0 }} />
+        <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.35)', zIndex: 0 }} />
         <div style={{
           position: 'absolute', inset: 0,
-          background: 'radial-gradient(ellipse at center, transparent 30%, rgba(8,11,18,0.75) 100%)',
+          background: 'radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.75) 100%)',
           zIndex: 1, pointerEvents: 'none', filter: 'blur(100px)',
         }} />
 
@@ -684,7 +684,7 @@ export const Hero = () => {
         width:           '100%',
         height:          '100vh',
         zIndex:          10,
-        backgroundColor: '#080B12',
+        backgroundColor: '#000000',
         overflow:        'visible',
         borderTop:       '1px solid rgba(0,240,255,0.08)',
         boxShadow:       '0 -40px 100px rgba(0,0,0,0.95)',
@@ -694,7 +694,7 @@ export const Hero = () => {
           bottom: 0, left: 0,
           width: '100%', height: '220px',
           zIndex: 3, pointerEvents: 'none',
-          background: `linear-gradient(to bottom, rgba(8,11,18,0) 0%, rgba(8,11,18,0.5) 40%, rgba(8,11,18,0.9) 75%, #080B12 100%)`,
+          background: `linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.5) 40%, rgba(0,0,0,0.9) 75%, #000000 100%)`,
         }} />
 
         {/* ── 3-COLUMN EDITORIAL GRID ─────────────────────────────── */}
@@ -723,7 +723,7 @@ export const Hero = () => {
             paddingLeft:   '0.1rem',
             transform:     'translate(-90px, 60px)',
           }}>
-            {STATS.map(({ icon: Icon, value, label }, i) => (
+            {STATS.map(({ value, label }, i) => (
               <div key={label} style={{
                 display:       'flex',
                 flexDirection: 'column',

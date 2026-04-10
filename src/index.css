@@ -21,7 +21,7 @@ html {
 
 body {
   font-family: 'Outfit', sans-serif;
-  background-color: #080B12;
+  background-color: #000000;
   color: #ffffff;
   overflow-x: hidden;
 }
@@ -79,7 +79,7 @@ body {
 
 ::selection {
   background-color: #00F0FF;
-  color: #080B12;
+  color: #000000;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════

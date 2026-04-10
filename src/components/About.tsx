@@ -45,9 +45,9 @@ export const About = () => {
   return (
     <section id="about" className="relative py-24 px-6 overflow-hidden">
       {/* Desktop/tablet gradient background — hidden on mobile */}
-      <div className="absolute inset-0 hidden sm:block bg-gradient-to-b from-[#080B16] via-[#0D1117] to-[#080B12]" />
+      <div className="absolute inset-0 hidden sm:block bg-gradient-to-b from-[#080B16] via-[#0D1117] to-[#000000]" />
       {/* Mobile: plain solid background, no animation */}
-      <div className="absolute inset-0 sm:hidden bg-[#080B12]" />
+      <div className="absolute inset-0 sm:hidden bg-[#000000]" />
 
       <div className="relative z-10 max-w-7xl mx-auto">
 
@@ -69,7 +69,7 @@ export const About = () => {
                 <img
                   src="/media/profile.png"
                   alt="Profile"
-                  className="w-full h-full object-cover scale-110 object-[center_10%] transition-transform duration-700"
+                  className="w-full h-full object-cover scale-11 object-[center_10%] transition-transform duration-700"
                 />
               </div>
             </div>

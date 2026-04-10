@@ -35,7 +35,7 @@
   left: 0;
   right: 0;
   height: 35vh;
-  background: linear-gradient(to top, #080B12, transparent);
+  background: linear-gradient(to top, #000000, transparent);
   z-index: 1;
   pointer-events: none;
 }
@@ -58,7 +58,7 @@
   position: absolute;
   inset: 0;
   z-index: 2;
-  background-color: #080B12;
+  background-color: #000000;
 
   /* Standard (Chrome 116+, Firefox 53+) */
   mask-image: linear-gradient(black, black), url(#text-mask);
