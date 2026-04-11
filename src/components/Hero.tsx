@@ -18,7 +18,7 @@ const REPEATS = 100;
 
 const STATS = [
   { icon: Briefcase, value: '4+',  label: 'Roles'               },
-  { icon: Calendar,  value: '3+',  label: 'Years Experience'     },
+  { icon: Calendar,  value: '2+',  label: 'Years Experience'     },
   { icon: Rocket,    value: '10+', label: 'Projects'             },
   { icon: Trophy,    value: '2',   label: 'Leadership Positions' },
 ];
