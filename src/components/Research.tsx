@@ -343,11 +343,7 @@ export const Research = () => {
           </motion.div>
         </div>
 
-        {/* corner label */}
-        <div style={{ position: 'absolute', top: '1.8rem', left: '2.5rem', zIndex: 80, display: 'flex', alignItems: 'center', gap: '0.55rem', pointerEvents: 'none' }}>
-          <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#dc2626' }} /> {/* Updated: Golden dot to Red dot */}
-          <span style={{ fontFamily: 'monospace', fontSize: '0.53rem', letterSpacing: '0.22em', color: 'rgba(255,255,255,0.22)', textTransform: 'uppercase' }}>Deep Dives</span>
-        </div>
+
 
         {/* top + bottom blend fades */}
         <div aria-hidden style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 80, background: 'linear-gradient(to bottom, #000000, transparent)', zIndex: 70, pointerEvents: 'none' }} />

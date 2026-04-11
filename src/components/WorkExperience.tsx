@@ -250,7 +250,7 @@ export const WorkExperience = () => {
           <div style={{
             width: '96vw', maxWidth: 1600, height: '80vh',
             background: '#ffffff', borderRadius: 12,
-            boxShadow: '0 0 80px 25px rgba(255, 5, 5, 0.23), 0 25px 50px -12px rgba(0,0,0,0.8), 0 0 0 1px rgba(241, 23, 23, 0.1)',
+            boxShadow: '0 0 80px 25px rgba(26, 255, 5, 0.25), 0 25px 50px -12px rgba(0,0,0,0.8), 0 0 0 1px rgba(241, 23, 23, 0.1)',
             display: 'flex', flexDirection: 'column', overflow: 'hidden',
             fontFamily: '"Roboto", Arial, sans-serif'
           }}>
@@ -491,24 +491,7 @@ export const WorkExperience = () => {
 
       </div>
 
-      <style>{`
-        #work-experience *::-webkit-scrollbar {
-          width: 8px;
-          height: 8px;
-        }
-        #work-experience *::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        #work-experience *::-webkit-scrollbar-thumb {
-          background-color: rgba(0, 0, 0, 0.15);
-          border-radius: 10px;
-          border: 2px solid transparent;
-          background-clip: padding-box;
-        }
-        #work-experience *::-webkit-scrollbar-thumb:hover {
-          background-color: rgba(0, 0, 0, 0.25);
-        }
-      `}</style>
+
     </div>
   );
 };

@@ -288,7 +288,7 @@ const DetailCard: React.FC<{
       transition={{ duration: 0.26 }}
       onClick={onClose}
       style={{
-        position: 'absolute', inset: 0, zIndex: 300,
+        position: 'fixed', inset: 0, zIndex: 300,
         background: 'rgba(0,0,0,0.7)',
         backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -780,11 +780,7 @@ export const Projects: React.FC = () => {
         <div aria-hidden="true" style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 80, zIndex: 70, pointerEvents: 'none', background: 'linear-gradient(to bottom, #000000, transparent)' }} />
         <div aria-hidden="true" style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 80, zIndex: 70, pointerEvents: 'none', background: 'linear-gradient(to top, #000000, transparent)' }} />
 
-        {/* Chrome: top-left */}
-        <div style={{ position: 'absolute', top: '1.8rem', left: '2.5rem', zIndex: 80, display: 'flex', alignItems: 'center', gap: '0.6rem', pointerEvents: 'none' }}>
-          <motion.div animate={{ backgroundColor: isIntro ? '#ef4444' : activeProj.accent }} transition={{ duration: 0.5 }} style={{ width: 7, height: 7, borderRadius: '50%' }} />
-          <span style={{ fontFamily: 'monospace', fontSize: '0.54rem', letterSpacing: '0.22em', color: 'rgba(255,255,255,0.24)', textTransform: 'uppercase' }}>Selected Work</span>
-        </div>
+
 
         {/* Chrome: top-right */}
         {!isIntro && (
